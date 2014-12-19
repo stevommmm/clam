@@ -48,12 +48,17 @@ def page_index(req):
 
 	# Handle file uploads
 	if 'fileupload' in req._POST:
-		fn = req._POST['fileupload'].filename
-		filecontent = req._POST['fileupload'].file.read()
-		fullfn = absjoin(config.file_root, dirname, fn)
-		print fullfn
-		with open(fullfn, 'wb') as ouf:
-			ouf.write(filecontent)
+		files = req._POST['fileupload']
+		if type(files) != list:
+			files = [files]
+
+		for f in files:
+			fn = f.filename
+			filecontent = f.file.read()
+			fullfn = absjoin(config.file_root, dirname, fn)
+			print fullfn
+			with open(fullfn, 'wb') as ouf:
+				ouf.write(filecontent)
 
 
 	# Determine pretty names for folders, used in HTML output
@@ -75,6 +80,12 @@ def page_index(req):
 	if not os.access(path, os.R_OK):
 		return "403, You do not have permission to access this file."
 
+	if os.path.isfile(path):
+		if 'delete' in req._GET:
+			os.remove(path)
+			path = os.path.dirname(path)
+
+
 	if os.path.isdir(path):
 		filelist = listdir(path)
 		content = []
@@ -89,6 +100,7 @@ def page_index(req):
 				content.append(templates.file(dirname=dirname, filename=f[1]))
 
 		return templates.index(
+			title=os.sep if not dirname else dirname,
 			content=templates.filelist(content='\n'.join(content))
 		)
 

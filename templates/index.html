@@ -1,20 +1,21 @@
 <!doctype html>
 <html>
 <head>
+	<title>Clam - ${title}</title>
 	<link type="text/css" rel="stylesheet" href="style.css">
 </head>
 <body>
 	<div class="wrapper">
 		<header>
 			<h1 class="title">Clam</h1>
-			<p>Header content</p>
+			<p>Web based file storage.</p>
 
 			<hr>
 			<!-- <p>Upload File</p> -->
 			<form class="fileupload" method="POST" enctype="multipart/form-data">
 			<fieldset>
     			<legend>Upload File</legend>
-			    <input type="file" name="fileupload">
+			    <input type="file" name="fileupload" multiple>
 			    <input type="submit" value="Upload">
 			</fieldset>
 			</form>
