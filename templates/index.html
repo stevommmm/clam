@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+	<link type="text/css" rel="stylesheet" href="style.css">
+</head>
+<body>
+	<div class="wrapper">
+		<header>
+			<h1 class="title">Clam</h1>
+			<p>Header content</p>
+
+			<hr>
+			<!-- <p>Upload File</p> -->
+			<form class="fileupload" method="POST" enctype="multipart/form-data">
+			<fieldset>
+    			<legend>Upload File</legend>
+			    <input type="file" name="fileupload">
+			    <input type="submit" value="Upload">
+			</fieldset>
+			</form>
+		</header>
+		<section>
+			${content}
+		</section>
+	</div>
+</body>
+</html>
