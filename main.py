@@ -3,12 +3,18 @@ import os
 import sys
 import time
 import stat
+import logging
 from lucid import lucid, request
 from templates import templates
+
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 class config:
 	root = os.path.abspath(os.path.dirname(__file__))
 	file_root = os.path.join(root, 'files')
+
+if not os.path.exists(config.file_root):
+	os.mkdir(config.file_root)
 
 application = lucid()
 
@@ -31,6 +37,35 @@ def listdir(directory):
 	return map(lambda x:(os.path.isdir(os.path.join(directory, x)), x), f)
 
 
+def safepath(directory, exists=True):
+	assert directory.startswith(config.file_root), "403, Access denied."
+	if not exists:
+		return True
+	assert os.path.exists(directory), "404, File does not exist."
+	assert not os.path.islink(directory), "404, File does not exist."
+	assert os.access(directory, os.R_OK), "403, You do not have permission to access this file."
+	return True
+
+def app_create_folder(parent, directory):
+	if not directory or directory == '':
+		return False
+	path = absjoin(parent, directory)
+	if safepath(path, exists=False):
+		return os.mkdir(path)
+
+def app_file_uploads(parent, files):
+	for f in files:
+		if not f.file:
+			return False
+		fn = f.filename
+		filecontent = f.file.read()
+		fullfn = absjoin(parent, fn)
+		if safepath(parent, fullfn):
+			with open(fullfn, 'wb') as ouf:
+				ouf.write(filecontent)
+	return True
+
+
 @application.route('^/style.css$')
 def rstyle(req):
 	req.headers = [('content-type', 'text/css')]
@@ -46,20 +81,6 @@ def page_index(req):
 	if 'file' in req._GET:
 		filename = req._GET['file'][-1].strip('/\\')
 
-	# Handle file uploads
-	if 'fileupload' in req._POST:
-		files = req._POST['fileupload']
-		if type(files) != list:
-			files = [files]
-
-		for f in files:
-			fn = f.filename
-			filecontent = f.file.read()
-			fullfn = absjoin(config.file_root, dirname, fn)
-			print fullfn
-			with open(fullfn, 'wb') as ouf:
-				ouf.write(filecontent)
-
 
 	# Determine pretty names for folders, used in HTML output
 	p_dirname = parentdir(dirname)
@@ -73,17 +94,40 @@ def page_index(req):
 	)
 
 	# Protect us from writing to places we don't want
-	if not path.startswith(config.root):
-		return "403, Access denied."
-	if not os.path.exists(path) or os.path.islink(path):
-		return "404, File does not exist."
-	if not os.access(path, os.R_OK):
-		return "403, You do not have permission to access this file."
+	try:
+		safepath(path)
+	except AssertionError as e:
+		return e.message
+
+	# Handle folder creation
+	if 'newfolder' in req._POST:
+		nfolder = req._POST.getvalue('newfolder')
+		if app_create_folder(path, nfolder):
+			req.redirect = '/?dir=' + dirname
+			return
+
+	# Handle file uploads
+	if 'fileupload' in req._POST:
+		files = req._POST['fileupload']
+		if type(files) != list:
+			files = [files]
+		if files[-1].file:
+			if app_file_uploads(path, files):
+				req.redirect = '/?dir=' + dirname
+				return
 
 	if os.path.isfile(path):
 		if 'delete' in req._GET:
 			os.remove(path)
-			path = os.path.dirname(path)
+			req.redirect ='/?dir=' + p_dirname
+			return
+
+	if os.path.isdir(path):
+		if 'delete' in req._GET:
+			import shutil
+			shutil.rmtree(path)
+			req.redirect = '/?dir=' + p_dirname
+			return
 
 
 	if os.path.isdir(path):
@@ -91,7 +135,7 @@ def page_index(req):
 		content = []
 		# If we are in the root don't add a "parent" option
 		if not path == config.file_root:
-			content.append(templates.directory(dirname=p_dirname, filename='..'))
+			content.append(templates.back(dirname=p_dirname, filename='..'))
 
 		for f in filelist:
 			if f[0]:

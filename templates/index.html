@@ -10,13 +10,21 @@
 			<h1 class="title">Clam</h1>
 			<p>Web based file storage.</p>
 
-			<hr>
-			<!-- <p>Upload File</p> -->
-			<form class="fileupload" method="POST" enctype="multipart/form-data">
+			<br>
+			<form method="POST" enctype="multipart/form-data">
 			<fieldset>
     			<legend>Upload File</legend>
-			    <input type="file" name="fileupload" multiple>
+    			<div class="button">
+				    <input type="file" name="fileupload" class="upload" multiple>
+				</div>
 			    <input type="submit" value="Upload">
+			</fieldset>
+			</form>
+			<form method="POST" enctype="multipart/form-data">
+			<fieldset>
+    			<legend>New Folder</legend>
+			    <input type="text" name="newfolder" placeholder="Folder Name">
+			    <input type="submit" value="Create">
 			</fieldset>
 			</form>
 		</header>
