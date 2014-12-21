@@ -60,7 +60,7 @@ def app_file_uploads(parent, files):
 		fn = f.filename
 		filecontent = f.file.read()
 		fullfn = absjoin(parent, fn)
-		if safepath(parent, fullfn):
+		if safepath(fullfn, exists=False):
 			with open(fullfn, 'wb') as ouf:
 				ouf.write(filecontent)
 	return True
@@ -73,6 +73,7 @@ def rstyle(req):
 
 @application.route('^/$')
 def page_index(req):
+	
 	dirname = ''
 	if 'dir' in req._GET:
 		dirname = req._GET['dir'][-1].strip('/\\')
@@ -111,7 +112,7 @@ def page_index(req):
 		files = req._POST['fileupload']
 		if type(files) != list:
 			files = [files]
-		if files[-1].file:
+		if files[-1].filename:
 			if app_file_uploads(path, files):
 				req.redirect = '/?dir=' + dirname
 				return
@@ -119,7 +120,7 @@ def page_index(req):
 	if os.path.isfile(path):
 		if 'delete' in req._GET:
 			os.remove(path)
-			req.redirect ='/?dir=' + p_dirname
+			req.redirect ='/?dir=' + dirname
 			return
 
 	if os.path.isdir(path):
@@ -128,14 +129,13 @@ def page_index(req):
 			shutil.rmtree(path)
 			req.redirect = '/?dir=' + p_dirname
 			return
-
-
+ 
 	if os.path.isdir(path):
 		filelist = listdir(path)
 		content = []
 		# If we are in the root don't add a "parent" option
 		if not path == config.file_root:
-			content.append(templates.back(dirname=p_dirname, filename='..'))
+			content.append(templates.parent(dirname=p_dirname, filename='..'))
 
 		for f in filelist:
 			if f[0]:
