@@ -11,13 +11,13 @@
 			<p>Web based file storage.</p>
 
 			<br>
-			<form method="POST" enctype="multipart/form-data">
+			<form method="POST" enctype="multipart/form-data" onsubmit="javascript:function(e){ alert('Uploading');}">
 			<fieldset>
     			<legend>Upload File</legend>
     			<div class="button">
 				    <input type="file" name="fileupload" class="upload" multiple required="required">
 				</div>
-			    <input type="submit" value="Upload" onclick="javascript:function(e){ alert('Uploading');}">
+			    <input type="submit" value="Upload">
 			</fieldset>
 			</form>
 			<form method="POST" enctype="multipart/form-data">

@@ -35,7 +35,7 @@ h3, h4, h5, h6 {
 }
 
 a {
-  color:#4aa6d3;
+  color:#D45E4E;
   font-weight:400;
   text-decoration:none;
 }
@@ -55,8 +55,8 @@ input {
 }
 input[type="text"], input[type="password"], input[type="submit"], .button {
 	position: relative;
-	color: #4aa6d3;
-	border: 1px solid #78b5d3;
+	color: #D45E4E;
+	border: 1px solid #D45E4E;
 	background-color: transparent;
 	border-radius: 4px;
 	padding: 4px 8px;
@@ -169,9 +169,9 @@ header .title {
   font-size: 28px;
   padding-top: 2px;
   padding-bottom: 8px;
-  /*display: inline-block;*/
   margin: 0;
   width: 110px;
+  color: #D45E4E;
 }
 
 section {
