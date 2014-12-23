@@ -11,7 +11,7 @@
 			<p>Web based file storage.</p>
 
 			<br>
-			<form method="POST" enctype="multipart/form-data" onsubmit="javascript:function(e){ alert('Uploading');}">
+			<form method="POST" enctype="multipart/form-data" onsubmit="displayUpload(this);">
 			<fieldset>
     			<legend>Upload File</legend>
     			<div class="button">
@@ -32,5 +32,15 @@
 			${content}
 		</section>
 	</div>
+	<script type="text/javascript">
+	function displayUpload(e) {
+		var subtext = e.firstElementChild.lastElementChild;
+		var i = 0;
+		setInterval(function() {
+		    i = ++i % 4;
+		    subtext.value = "Uploading" + Array(i+1).join(".") + Array(4- i).join(" ");
+		}, 500);
+	}
+	</script>
 </body>
 </html>
