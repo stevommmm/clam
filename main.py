@@ -114,6 +114,12 @@ def app_file_uploads(parent, files):
 				ouf.write(filecontent)
 	return True
 
+def getspace():
+	s = os.statvfs(config.root)
+	freegb = s.f_bavail * s.f_frsize / 1024 / 1024 / 1024
+	totalgb = s.f_blocks * s.f_frsize / 1024 / 1024 / 1024
+	return {'disk_percent': int(100 - (100 * float(freegb) / float(totalgb))), 'disk_ingb': freegb}
+
 
 @application.route('^/style.css$')
 def rstyle(req):
@@ -227,7 +233,8 @@ def page_index(req):
 		return templates.index(
 			title=os.sep if not dirname else dirname,
 			username=username,
-			content=templates.filelist(content='\n'.join(content))
+			content=templates.filelist(content='\n'.join(content)),
+			**getspace()
 		)
 
 	if os.path.isfile(path):
