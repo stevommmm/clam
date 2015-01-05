@@ -44,8 +44,8 @@
 				<h1 class="title">Clam</h1>
 				<p>Web based file storage.</p>
 				<hr>
-				<p>&rtrif; ${username}</p>
-				<p>[<a href="javascript:template('js_changepass');">Change Password</a>] [<a href="/logout">Logout</a>]</p>
+				<p><strong>${username}</strong></p>
+				<p>[<a href="javascript:template('js_changepass');">Change Password</a>] [<a href="javascript:template('js_logout');">Logout</a>]</p>
 			</div>
 				
 			<div class="menu-border">
@@ -58,22 +58,6 @@
 				<p>${disk_ingb} Gb free</p>
 				<div class='bar'><div class='bar-used' style='width:${disk_percent}%'></div></div>
 			</div>
-			<!-- <form method="POST" enctype="multipart/form-data" onsubmit="displayUpload(this);">
-			<fieldset>
-    			<legend>Upload File</legend>
-    			<div class="button">
-				    <input type="file" name="fileupload" class="upload" multiple required="required">
-				</div>
-			    <input type="submit" value="Upload">
-			</fieldset>
-			</form>
-			<form method="POST" enctype="multipart/form-data">
-			<fieldset>
-    			<legend>New Folder</legend>
-			    <input type="text" name="newfolder" placeholder="Folder Name" required="required">
-			    <input type="submit" value="Create">
-			</fieldset>
-			</form> -->
 		</header>
 		<section>
 			${content}
@@ -107,6 +91,15 @@
 				<input type="password" name="oldpass" placeholder="Old Password" required="required">
 				<input type="password" name="newpass" placeholder="New Password" required="required">
 			    <input type="submit" value="Update">
+			</fieldset>
+		</form>
+	</template>
+	<template id="js_logout">
+		<form method="POST" enctype="multipart/form-data" action="/logout">
+			<fieldset>
+				<legend>Are you sure you wish to logout?</legend>
+				<input type="hidden" name="cs" value="${cs}">
+			    <input type="submit" value="Yes">
 			</fieldset>
 		</form>
 	</template>
