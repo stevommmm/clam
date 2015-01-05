@@ -3,15 +3,58 @@
 <head>
 	<title>Clam - ${title}</title>
 	<link type="text/css" rel="stylesheet" href="style.css">
+	<style type="text/css">
+	
+	</style>
+	<script type="text/javascript">
+	function template(tmpl) {
+		var m = document.getElementById('fullpage');
+		var t = document.importNode(document.getElementById(tmpl).content, true);
+		m.innerHTML = "";
+		m.appendChild(t);
+
+		var a = document.createElement('a');
+		a.href = "javascript:closemodal();";
+		a.innerHTML = "Close";
+		m.appendChild(a);
+
+		m.className = "display";
+	}
+	function closemodal() {
+		document.getElementById('fullpage').className = "hidden";
+	}
+
+	function displayUpload(e) {
+		var subtext = e.firstElementChild.lastElementChild;
+		var i = 0;
+		setInterval(function() {
+		    i = ++i % 4;
+		    subtext.value = "Uploading" + Array(i+1).join(".") + Array(4- i).join(" ");
+		}, 500);
+	}
+	</script>
 </head>
 <body>
+	<noscript>
+	<div style="width: 100%; padding: 10px; text-align: center;">Most of this site will not function without javascript. Please enable it.</div>
+	</noscript>
 	<div class="wrapper">
 		<header>
 			<div class="menu-border">
-			<h1 class="title">Clam</h1>
-			<p>Web based file storage.</p>
+				<h1 class="title">Clam</h1>
+				<p>Web based file storage.</p>
+				<hr>
+				<p>Currently logged in as:</p>
+				<strong>${username}</strong> [<a href="javascript:template('js_changepass');">Change Password</a>]
 			</div>
-			<form method="POST" enctype="multipart/form-data" onsubmit="displayUpload(this);">
+				
+			<div class="menu-border">
+				<ul>
+					<li><a href="javascript:template('js_fileupload');">Upload Files</a></li>
+					<li><a href="javascript:template('js_newfolder');">New Folder</a></li>
+				</ul>
+			</div>
+			<!-- <form method="POST" enctype="multipart/form-data" onsubmit="displayUpload(this);">
 			<fieldset>
     			<legend>Upload File</legend>
     			<div class="button">
@@ -26,21 +69,42 @@
 			    <input type="text" name="newfolder" placeholder="Folder Name" required="required">
 			    <input type="submit" value="Create">
 			</fieldset>
-			</form>
+			</form> -->
 		</header>
 		<section>
 			${content}
 		</section>
 	</div>
-	<script type="text/javascript">
-	function displayUpload(e) {
-		var subtext = e.firstElementChild.lastElementChild;
-		var i = 0;
-		setInterval(function() {
-		    i = ++i % 4;
-		    subtext.value = "Uploading" + Array(i+1).join(".") + Array(4- i).join(" ");
-		}, 500);
-	}
-	</script>
+	<div id="fullpage" class="hidden"></div>
+	<template id="js_newfolder">
+		<form method="POST" enctype="multipart/form-data">
+			<fieldset>
+    			<legend>New Folder</legend>
+			    <input type="text" name="newfolder" placeholder="Folder Name" required="required">
+			    <input type="submit" value="Create">
+			</fieldset>
+		</form>
+	</template>
+	<template id="js_fileupload">
+		<form method="POST" enctype="multipart/form-data" onsubmit="displayUpload(this);">
+			<fieldset>
+				<legend>Upload File</legend>
+				<div class="button">
+					<input type="file" name="fileupload" class="upload" multiple required="required">
+				</div>
+				<input type="submit" value="Upload">
+			</fieldset>
+		</form>
+	</template>
+	<template id="js_changepass">
+		<form method="POST" enctype="multipart/form-data">
+			<fieldset>
+				<legend>Change Password</legend>
+				<input type="password" name="oldpass" placeholder="Old Password" required="required">
+				<input type="password" name="newpass" placeholder="New Password" required="required">
+			    <input type="submit" value="Update">
+			</fieldset>
+		</form>
+	</template>
 </body>
 </html>
