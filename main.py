@@ -6,7 +6,7 @@ import stat
 import logging
 import hashlib
 from Cookie import SimpleCookie
-from lucid import lucid, request
+from clamengine import clamengine, request
 from templates import templates
 
 logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
@@ -19,9 +19,9 @@ class config:
 if not os.path.exists(config.file_root):
 	os.mkdir(config.file_root)
 
-application = lucid()
+application = clamengine()
 
-def set_session(req, username):
+def set_session(req, username, expires=None):
 	s = username + ":" + req._ENV.get('REMOTE_ADDR', '-')
 	s_hash = hashlib.sha1(s + config.secret).hexdigest()
 
@@ -29,6 +29,8 @@ def set_session(req, username):
 	session_cookie['clamsession'] = s + ":" + s_hash
 	session_cookie['clamsession']["path"] = '/'
 	session_cookie['clamsession']["httponly"] = True
+	if expires:
+		session_cookie['clamsession']["expires"] = expires
 	req.headers += [("set-cookie", m.OutputString()) for m in session_cookie.values()]
 
 def get_session(req):
@@ -133,6 +135,11 @@ def page_login(req):
 			return
 
 	return templates.login()
+
+@application.route('^/logout$')
+def page_logout(req):
+	set_session(req, '-', 'Thu, 01 Jan 1970 00:00:00 GMT')
+	req.redirect = '/'
 
 @application.route('^/$')
 def page_index(req):

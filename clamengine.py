@@ -29,7 +29,7 @@ class request(dict):
 		safe_env = filter_by_list(self._ENV, ['CONTENT_LENGTH', 'CONTENT_TYPE', 'REQUEST_METHOD'])
 		return cgi.FieldStorage(fp=self._ENV['wsgi.input'], environ=safe_env, keep_blank_values=1)
 
-class lucid(object):
+class clamengine(object):
 	def __init__(self):
 		self.routes = {}
 
@@ -72,7 +72,7 @@ class lucid(object):
 		return self.wsgi(environ, start_response)
 
 	def run(self, host="0.0.0.0", port=8000):
-		'''Run this instance of lucid using simple_server'''
+		'''Run this instance of clamengine using simple_server'''
 		from wsgiref.simple_server import make_server
 		srv =  make_server(host, port, self)
 		try:
@@ -82,4 +82,4 @@ class lucid(object):
 
 
 if __name__ == '__main__':
-	lucid().run()
+	clamengine().run()
