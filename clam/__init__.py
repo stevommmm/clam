@@ -2,6 +2,32 @@ import re
 import cgi
 import itertools
 import urlparse
+import collections
+from config import config
+
+import logging
+logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+# Overwrite the fieldstorage __repr__ method to not include the uploaded file binary, make logging much cleaner
+cgi.FieldStorage.__repr__ = lambda x: "FieldStorage(%r, %r, \"...\")" % ( x.name, x.filename)
+
+hooks = collections.defaultdict(list)
+
+class hook(object):
+	@staticmethod
+	def register(event_name, func):
+		logger.info('Registered "%s" for event "%s"', event_name, func.__name__)
+		hooks[event_name].append(func)
+
+	@staticmethod
+	def call(event_name, req, *args):
+		retdata = []
+		for x in hooks[event_name]:
+			logger.debug('Dispatched "%s" to "%s" with args %s', event_name, x.__name__, str(args))
+			retdata.append(x(req, *args))
+		return retdata 
+
 
 def filter_by_list(fdict, flist):
 	def inner(key):
@@ -17,10 +43,13 @@ class request(dict):
 		self._ENV = environ
 		self._GET = self.__split_get()
 		self._POST = self.__split_post()
+		self.body = ''
 		if type(re_args) == dict:
-			self.body = func(self, **re_args)
+			fresult = func(self, **re_args)
 		else:
-			self.body = func(self, *re_args)
+			fresult = func(self, *re_args)
+		if fresult:
+			self.body += fresult
 
 	def __split_get(self):
 		return urlparse.parse_qs(self._ENV.get('QUERY_STRING', ''), keep_blank_values=True)

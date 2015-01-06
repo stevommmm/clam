@@ -1,14 +1,12 @@
 #!/usr/bin/env python
 import os
 import sys
+import hashlib
 import time
-import stat
-import logging
-from clam import clamengine, request, auth, fs
-from clam.config import config
+import itertools
+from clam import clamengine, request, util, hook, config, logger
 from templates import templates
-
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+from plugins import *
 
 application = clamengine()
 
@@ -26,8 +24,8 @@ def page_login(req):
 			return templates.login()
 
 		un = un.lower()
-		if auth.auth_user(un, pw):
-			auth.set_session(req, un)
+		if any(hook.call('auth_user', req, un, pw)):
+			hook.call('set_session', req, un)
 			req.redirect = '/'
 			return
 
@@ -36,19 +34,17 @@ def page_login(req):
 @application.route('^/logout$')
 def page_logout(req):
 	if req.method == "POST":
-		username = auth.get_session(req)
+		username = hook.call('get_user', req)[-1]
 		if username:
 			cs = req._POST.getvalue('cs')
 			if cs:
-				if cs == auth.hashcs(username):
-					auth.set_session(req, '-', 'Thu, 01 Jan 1970 00:00:00 GMT')
-	print username
-	print cs
+				if cs == hashlib.sha1(username + config.secret).hexdigest():
+					hook.call('set_session', req, '-', 'Thu, 01 Jan 1970 00:00:00 GMT')
 	req.redirect = '/'
 
 @application.route('^/$')
 def page_index(req):
-	username = auth.get_session(req)
+	username = hook.call('get_user', req)[-1]
 	if not username:
 		req.redirect = '/login'
 		return
@@ -56,8 +52,8 @@ def page_index(req):
 	if 'oldpass' in req._POST and 'newpass' in req._POST:
 		oldp = req._POST.getvalue('oldpass')
 		newp = req._POST.getvalue('newpass')
-		if auth.auth_user(username, oldp):
-			auth.set_password(username, newp)
+		if any(hook.call('auth_user', req, username, oldp)):
+			hook.call('set_user_password', username, newp)
 	
 	dirname = ''
 	if 'dir' in req._GET:
@@ -67,13 +63,12 @@ def page_index(req):
 	if 'file' in req._GET:
 		filename = req._GET['file'][-1].strip('/\\')
 
-
 	# Determine pretty names for folders, used in HTML output
-	p_dirname = fs.parentdir(dirname)
-	s_dirname = fs.softdir(dirname)
+	p_dirname = util.parentdir(dirname)
+	s_dirname = util.softdir(dirname)
 
 	# Create absolute path of file or folder, used for security below
-	path = fs.absjoin(
+	path = util.absjoin(
 		config.file_root,
 		username,
 		dirname,
@@ -82,14 +77,14 @@ def page_index(req):
 
 	# Protect us from writing to places we don't want
 	try:
-		fs.safepath(path)
+		util.safepath(path)
 	except AssertionError as e:
 		return e.message
 
 	# Handle folder creation
 	if 'newfolder' in req._POST:
 		nfolder = req._POST.getvalue('newfolder')
-		if fs.app_create_folder(path, nfolder):
+		if any(hook.call('directory_create', username, path, nfolder)):
 			req.redirect = '/?dir=' + dirname
 			return
 
@@ -99,28 +94,23 @@ def page_index(req):
 		if type(files) != list:
 			files = [files]
 		if files[-1].filename:
-			if fs.app_file_uploads(path, files):
-				req.redirect = '/?dir=' + dirname
-				return
+			for f in files:
+				list(hook.call('file_create', username, path, f))
 
-	if os.path.isfile(path):
-		if 'delete' in req._GET:
-			os.remove(path)
-			req.redirect ='/?dir=' + dirname
+			req.redirect = '/?dir=' + dirname
 			return
 
+	# Handle directory list or delete
 	if os.path.isdir(path):
 		if 'delete' in req._GET:
-			import shutil
-			shutil.rmtree(path)
+			hook.call('directory_delete', username, path)
 			req.redirect = '/?dir=' + p_dirname
 			return
- 
-	if os.path.isdir(path):
-		filelist = fs.listdir(path)
+
+		filelist = itertools.chain.from_iterable(hook.call('directory_list', username, path))
 		content = []
 		# If we are in the root don't add a "parent" option
-		if not path == fs.absjoin(config.file_root, username):
+		if not path == util.absjoin(config.file_root, username):
 			content.append(templates.parent(dirname=p_dirname, filename='..'))
 
 		for f in filelist:
@@ -133,26 +123,21 @@ def page_index(req):
 			title=os.sep if not dirname else dirname,
 			username=username,
 			content=templates.filelist(content='\n'.join(content)),
-			cs=auth.hashcs(username),
-			**fs.getspace()
+			cs=hashlib.sha1(username + config.secret).hexdigest(),
+			**util.getspace()
 		)
 
+	# Handle file read or delete
 	if os.path.isfile(path):
-		import mimetypes
-		mimetype, encoding = mimetypes.guess_type(path)
+		if 'delete' in req._GET:
+			hook.call('file_delete', req, username, path)
+			req.redirect ='/?dir=' + dirname
+		else:
+			f = list(hook.call('file_read', req, username, path, filename))
+			if len(f) > 1:
+				logger.critical('File read response from multiple hooks')
+			return f[0]
 
-		if encoding:
-			req.headers.append(('Content-Encoding', encoding))
-		if mimetype:
-			req.headers.append(('Content-Type', mimetype))
-		req.headers.append(('Content-Disposition', 'filename="%s"' % filename))
-
-		return open(path, 'rb').read()
-
-	
-
-
-
-
+		
 if __name__ == '__main__':
 	application.run(port=8000)

@@ -1,5 +1,5 @@
 import os
-from clam.config import config
+from clam import config
 
 def absjoin(*args):
 	return os.path.abspath(
@@ -15,41 +15,14 @@ def softdir(directory):
 	except IndexError:
 		return '/'
 
-def listdir(directory):
-	f = os.listdir(directory)
-	if '.password' in f:
-		f.remove('.password')
-	return map(lambda x:(os.path.isdir(os.path.join(directory, x)), x), f)
-
-
-def safepath(directory, exists=True):
+def safepath(directory, username='', exists=True):
 	assert directory.startswith(config.file_root), "403, Access denied."
+	assert directory.startswith(os.path.join(config.file_root, username)), "403, Access denied. User traversal."
 	if not exists:
 		return True
 	assert os.path.exists(directory), "404, File does not exist."
 	assert not os.path.islink(directory), "404, File does not exist."
 	assert os.access(directory, os.R_OK), "403, You do not have permission to access this file."
-	return True
-
-def app_create_folder(parent, directory):
-	if not directory or directory == '':
-		return False
-	path = absjoin(parent, directory)
-	if safepath(path, exists=False):
-		return os.mkdir(path)
-
-def app_file_uploads(parent, files):
-	for f in files:
-		if not f.file:
-			return False
-		fn = f.filename
-		if fn.startswith('.'): #dont allow uploading dot files
-			continue
-		filecontent = f.file.read()
-		fullfn = absjoin(parent, fn)
-		if safepath(fullfn, exists=False):
-			with open(fullfn, 'wb') as ouf:
-				ouf.write(filecontent)
 	return True
 
 def getspace():
