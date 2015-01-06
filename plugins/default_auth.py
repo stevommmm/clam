@@ -22,7 +22,7 @@ def default_set_session(req, username, expires=None):
 		session_cookie['clamsession']["expires"] = expires
 	req.headers += [("set-cookie", m.OutputString()) for m in session_cookie.values()]
 
-def default_get_user(req):
+def default_get_session(req):
 	s = req._ENV.get('HTTP_COOKIE', None)
 	if not s:
 		return None
@@ -55,6 +55,6 @@ def default_set_password(username, password):
 
 
 hook.register('set_session', default_set_session)
-hook.register('get_session', default_get_session
+hook.register('get_session', default_get_session)
 hook.register('verify_user_password', default_auth_user)
 hook.register('set_user_password', default_set_password)
