@@ -5,11 +5,12 @@ from clam import util
 
 from Cookie import SimpleCookie
 import hashlib
+import os
 
 def hashcs(s):
 	return hashlib.sha1(s + config.secret).hexdigest()
 
-def set_session(req, username, expires=None):
+def default_set_session(req, username, expires=None):
 	s = username + ":" + req._ENV.get('REMOTE_ADDR', '-')
 	s_hash = hashlib.sha1(s + config.secret).hexdigest()
 
@@ -53,7 +54,7 @@ def default_set_password(username, password):
 
 
 
-hook.register('set_session', set_session)
-hook.register('get_user', default_get_user)
-hook.register('auth_user', default_auth_user)
+hook.register('set_session', default_set_session)
+hook.register('get_session', default_get_session
+hook.register('verify_user_password', default_auth_user)
 hook.register('set_user_password', default_set_password)

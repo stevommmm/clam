@@ -24,7 +24,7 @@ def page_login(req):
 			return templates.login()
 
 		un = un.lower()
-		if any(hook.call('auth_user', req, un, pw)):
+		if any(hook.call('verify_user_password', req, un, pw)):
 			hook.call('set_session', req, un)
 			req.redirect = '/'
 			return
@@ -34,7 +34,7 @@ def page_login(req):
 @application.route('^/logout$')
 def page_logout(req):
 	if req.method == "POST":
-		username = hook.call('get_user', req)[-1]
+		username = hook.call('get_session', req)[-1]
 		if username:
 			cs = req._POST.getvalue('cs')
 			if cs:
@@ -44,7 +44,7 @@ def page_logout(req):
 
 @application.route('^/$')
 def page_index(req):
-	username = hook.call('get_user', req)[-1]
+	username = hook.call('get_session∆28', req)[-1]
 	if not username:
 		req.redirect = '/login'
 		return
@@ -52,7 +52,7 @@ def page_index(req):
 	if 'oldpass' in req._POST and 'newpass' in req._POST:
 		oldp = req._POST.getvalue('oldpass')
 		newp = req._POST.getvalue('newpass')
-		if any(hook.call('auth_user', req, username, oldp)):
+		if any(hook.call('verify_user_password', req, username, oldp)):
 			hook.call('set_user_password', username, newp)
 	
 	dirname = ''
