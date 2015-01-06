@@ -44,7 +44,7 @@ def page_logout(req):
 
 @application.route('^/$')
 def page_index(req):
-	username = hook.call('get_session∆28', req)[-1]
+	username = hook.call('get_session', req)[-1]
 	if not username:
 		req.redirect = '/login'
 		return
