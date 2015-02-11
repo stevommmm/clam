@@ -40,17 +40,22 @@ def default_get_session(req):
 def default_auth_user(req, username, password):
 	pwh = hashcs(password)
 	pwf = util.absjoin(config.file_root, username, '.password')
-	if util.safepath(pwf):
-		return pwh.strip() == open(pwf, 'rb').read().strip()
+	try:
+		if util.safepath(pwf):
+			return pwh.strip() == open(pwf, 'rb').read().strip()
+	except AssertionError, IOError:
+		pass
 	return False
 
 def default_set_password(username, password):
 	pwh = hashcs(password)
 	pwf = os.path.join(config.file_root, username, '.password')
-	if util.safepath(pwf):
-		with open(pwf, 'wb') as f:
-			f.write(pwh)
-
+	try:
+		if util.safepath(pwf):
+			with open(pwf, 'wb') as f:
+				f.write(pwh)
+	except AssertionError, IOError:
+		pass
 
 
 

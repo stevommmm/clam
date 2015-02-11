@@ -1,8 +1,8 @@
 import re
+import os
 import cgi
 import itertools
 import urlparse
-import collections
 from config import config
 
 import logging
@@ -12,21 +12,6 @@ logger = logging.getLogger(__name__)
 # Overwrite the fieldstorage __repr__ method to not include the uploaded file binary, make logging much cleaner
 cgi.FieldStorage.__repr__ = lambda x: "FieldStorage(%r, %r, \"...\")" % ( x.name, x.filename)
 
-hooks = collections.defaultdict(list)
-
-class hook(object):
-	@staticmethod
-	def register(event_name, func):
-		logger.info('Registered "%s" for event "%s"', event_name, func.__name__)
-		hooks[event_name].append(func)
-
-	@staticmethod
-	def call(event_name, req, *args):
-		retdata = []
-		for x in hooks[event_name]:
-			logger.debug('Dispatched "%s" to "%s" with args %s', event_name, x.__name__, str(args))
-			retdata.append(x(req, *args))
-		return retdata 
 
 
 def filter_by_list(fdict, flist):

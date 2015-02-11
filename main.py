@@ -71,6 +71,7 @@ def page_index(req):
 	path = util.absjoin(
 		config.file_root,
 		username,
+		'files',
 		dirname,
 		filename,
 	)
@@ -110,14 +111,14 @@ def page_index(req):
 		filelist = itertools.chain.from_iterable(hook.call('directory_list', username, path))
 		content = []
 		# If we are in the root don't add a "parent" option
-		if not path == util.absjoin(config.file_root, username):
+		if not path == util.absjoin(config.file_root, username, 'files'):
 			content.append(templates.parent(dirname=p_dirname, filename='..'))
 
 		for f in filelist:
 			if f[0]:
 				content.append(templates.directory(dirname=os.path.join(dirname, f[1]), filename=f[1]))
 			else:
-				content.append(templates.file(dirname=dirname, filename=f[1]))
+				content.append(templates.file(dirname=dirname, filename=f[1], fsize=f[2]))
 
 		return templates.index(
 			title=os.sep if not dirname else dirname,

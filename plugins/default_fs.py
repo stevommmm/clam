@@ -4,6 +4,14 @@ from clam import logger
 import os
 import mimetypes
 
+def humb(size):
+    """Human readable sizes, everything is in KB to begin with"""
+    suffixes = ['B', 'KB', 'MB', 'GB', 'TB']
+    suffixIndex = 0
+    while size > 1024:
+        suffixIndex += 1  # increment the index of the suffix
+        size = size / 1024.0  # apply the division
+    return "%.*f %s" % (1, size, suffixes[suffixIndex])
 
 def safepath(directory, username='', exists=True):
 	assert directory.startswith(config.file_root), "403, Access denied."
@@ -49,9 +57,7 @@ def default_directory_list(username, path):
 		return []
 
 	f = os.listdir(path)
-	if '.password' in f:
-		f.remove('.password')
-	return map(lambda x:(os.path.isdir(os.path.join(path, x)), x), f)
+	return map(lambda x:(os.path.isdir(os.path.join(path, x)), x, humb(os.path.getsize(os.path.join(path, x)))), f)
 
 def default_file_create(username, parent, file_object):
 	"""Delete file, using format /files/{username}/{path} """
