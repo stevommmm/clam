@@ -76,6 +76,8 @@ class clamengine(object):
 						start_response('200 OK', req.headers)
 						return str(req.body)
 				except Exception as e:
+					import traceback
+					print traceback.print_exc()
 					start_response('500 Internal Server Error', [('content-type', 'text/html')])
 					return (repr(e),)
 

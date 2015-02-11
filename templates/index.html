@@ -4,7 +4,15 @@
 	<title>Clam - ${title}</title>
 	<link type="text/css" rel="stylesheet" href="style.css">
 	<style type="text/css">
-	
+		.bar-used.success
+		{
+			background-color: #0c0;
+		}
+
+		.bar-used.failed
+		{
+			background-color: #c00;
+		}
 	</style>
 	<script type="text/javascript">
 	function template(tmpl) {
@@ -74,15 +82,16 @@
 		</form>
 	</template>
 	<template id="js_fileupload">
-		<form method="POST" enctype="multipart/form-data" onsubmit="displayUpload(this);">
+		<form id="upload" method="POST" enctype="multipart/form-data">
 			<fieldset>
 				<legend>Upload File</legend>
-				<div class="button">
-					<input type="file" name="fileupload" class="upload" multiple required="required">
+				<div>
+					<label for="fileselect">Files to upload:</label>
+					<input type="file" id="fileselect" onchange="FileSelectHandler(this)" name="fileupload" multiple="multiple" /> 
 				</div>
-				<input type="submit" value="Upload">
 			</fieldset>
 		</form>
+		<div id="progress"></div>
 	</template>
 	<template id="js_changepass">
 		<form method="POST" enctype="multipart/form-data">
@@ -103,5 +112,54 @@
 			</fieldset>
 		</form>
 	</template>
+
+	<script type="text/javascript">
+		function FileSelectHandler(e) {
+			console.log(e);
+			// fetch FileList object
+			var files = e.files || e.dataTransfer.files;
+
+			// process all File objects
+			for (var i = 0, f; f = files[i]; i++) {
+				UploadFile(f);
+			}
+
+		}
+
+		function UploadFile(file) {
+			var xhr = new XMLHttpRequest();
+			if (xhr.upload) {
+				// create progress bar
+				var o = document.getElementById('progress');
+				var progress = document.createElement("div");
+				progress.className = "bar";
+				var progress_used = document.createElement("div");
+				progress_used.className = "bar-used";
+				progress.appendChild(progress_used);
+				o.appendChild(document.createTextNode("Uploading " + file.name));
+				o.appendChild(progress);
+
+				// progress bar
+				xhr.upload.addEventListener("progress", function(e) {
+					var pc = parseInt((e.loaded / e.total * 100));
+					progress_used.style.width = pc + "%";
+				}, false);
+
+				// file received/failed
+				xhr.onreadystatechange = function(e) {
+					if (xhr.readyState == 4) {
+						progress_used.className = (xhr.status == 200 ? "bar-used success" : "bar-used failure");
+					}
+				};
+
+				// start upload
+				xhr.open("POST", window.location.href, true);
+				var formData = new FormData();
+				formData.append('fileupload', file, file.name);
+				xhr.send(formData);
+
+			}
+		}
+	</script>
 </body>
 </html>
