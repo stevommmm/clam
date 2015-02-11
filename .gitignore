@@ -2,3 +2,4 @@
 *.pyo
 files/*
 *.cfg
+plugins/oc_pw.py
