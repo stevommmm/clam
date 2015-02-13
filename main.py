@@ -10,6 +10,16 @@ from plugins import *
 
 application = clamengine()
 
+def csrfcheck(req):
+	username = hook.call('get_session', req)[-1]
+	if username:
+		cs = req._POST.getvalue('cs')
+		if cs:
+			if cs == hashlib.sha1(username + config.secret).hexdigest():
+				return True
+	return false
+
+
 @application.route('^/style.css$')
 def rstyle(req):
 	req.headers = [('content-type', 'text/css')]
@@ -34,12 +44,8 @@ def page_login(req):
 @application.route('^/logout$')
 def page_logout(req):
 	if req.method == "POST":
-		username = hook.call('get_session', req)[-1]
-		if username:
-			cs = req._POST.getvalue('cs')
-			if cs:
-				if cs == hashlib.sha1(username + config.secret).hexdigest():
-					hook.call('set_session', req, '-', 'Thu, 01 Jan 1970 00:00:00 GMT')
+		if csrfcheck(req):
+			hook.call('set_session', req, '-', 'Thu, 01 Jan 1970 00:00:00 GMT')
 	req.redirect = '/'
 
 @application.route('^/$')
@@ -49,7 +55,7 @@ def page_index(req):
 		req.redirect = '/login'
 		return
 
-	if 'oldpass' in req._POST and 'newpass' in req._POST:
+	if 'oldpass' in req._POST and 'newpass' in req._POST and csrfcheck(req):
 		oldp = req._POST.getvalue('oldpass')
 		newp = req._POST.getvalue('newpass')
 		if any(hook.call('verify_user_password', req, username, oldp)):
@@ -85,7 +91,7 @@ def page_index(req):
 	print req._POST
 
 	# Handle folder creation
-	if 'newfolder' in req._POST:
+	if 'newfolder' in req._POST and csrfcheck(req):
 		nfolder = req._POST.getvalue('newfolder')
 		if any(hook.call('directory_create', username, path, nfolder)):
 			req.redirect = '/?dir=' + dirname
