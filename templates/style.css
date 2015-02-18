@@ -157,6 +157,9 @@ header ul a {
 	display:block;
 	padding:6px;
 }
+header > .menu-border > ul > li:first-child > a {
+    font-weight: bold;
+}
 
 header .view {
 	display: inline;

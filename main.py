@@ -80,8 +80,6 @@ def page_index(req):
 		filename,
 	)
 
-	print req._POST
-
 	# Protect us from writing to places we don't want
 	try:
 		util.safepath(path, username)
