@@ -46,6 +46,14 @@ a small {
 	margin-top:-0.6em;
 	display:block;
 }
+noscript > p {
+	background-color: #D45E4E;
+	color: #fff;
+	width: 100%; 
+	padding: 10px; 
+	text-align: center;
+}
+
 input {
 	box-sizing: border-box;
 	-moz-box-sizing: border-box;

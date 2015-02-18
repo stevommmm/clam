@@ -1,6 +1,18 @@
 import os
 from clam import config
 
+def path(username, directory=None, filepath=None):
+	user_root = absjoin(config.file_root, username, 'files')
+	assert user_root.startswith(config.file_root), "403, Access denied."
+
+	dir_root = absjoin(user_root, directory)
+	assert dir_root.startswith(user_root), "403, Access denied."
+
+	file_root = absjoin(dir_root, filepath)
+	assert dir_root.startswith(dir_root), "403, Access denied."
+
+	return file_root
+
 def absjoin(*args):
 	return os.path.abspath(
 		os.path.join(*args)

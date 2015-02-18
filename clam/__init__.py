@@ -1,18 +1,13 @@
 import re
 import os
-import cgi
 import itertools
 import urlparse
 from config import config
+from customstorage import ClamFieldStorage
 
 import logging
-logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
+logging.basicConfig(format='%(process)-6d %(levelname)-8s %(message)s', level=logging.DEBUG)
 logger = logging.getLogger(__name__)
-
-# Overwrite the fieldstorage __repr__ method to not include the uploaded file binary, make logging much cleaner
-cgi.FieldStorage.__repr__ = lambda x: "FieldStorage(%r, %r, \"...\")" % ( x.name, x.filename)
-
-
 
 def filter_by_list(fdict, flist):
 	def inner(key):
@@ -41,7 +36,7 @@ class request(dict):
 
 	def __split_post(self):
 		safe_env = filter_by_list(self._ENV, ['CONTENT_LENGTH', 'CONTENT_TYPE', 'REQUEST_METHOD'])
-		return cgi.FieldStorage(fp=self._ENV['wsgi.input'], environ=safe_env, keep_blank_values=1)
+		return ClamFieldStorage(fp=self._ENV['wsgi.input'], environ=safe_env, keep_blank_values=1)
 
 class clamengine(object):
 	def __init__(self):

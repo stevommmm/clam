@@ -44,7 +44,7 @@
 </head>
 <body>
 	<noscript>
-	<div style="width: 100%; padding: 10px; text-align: center;">Most of this site will not function without javascript. Please enable it.</div>
+	<p>Most of this site will not function without javascript. Please enable it.</p>
 	</noscript>
 	<div class="wrapper">
 		<header>
@@ -140,6 +140,8 @@
 				progress.appendChild(progress_used);
 				o.appendChild(document.createTextNode("Uploading: " + file.name));
 				o.appendChild(progress);
+
+				console.log(file);
 
 				// progress bar
 				xhr.upload.addEventListener("progress", function(e) {

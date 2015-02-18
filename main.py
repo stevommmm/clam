@@ -74,21 +74,19 @@ def page_index(req):
 	s_dirname = util.softdir(dirname)
 
 	# Create absolute path of file or folder, used for security below
-	path = util.absjoin(
-		config.file_root,
+	path = util.path(
 		username,
-		'files',
 		dirname,
 		filename,
 	)
 
+	print req._POST
+
 	# Protect us from writing to places we don't want
 	try:
-		util.safepath(path)
+		util.safepath(path, username)
 	except AssertionError as e:
 		return e.message
-
-	print req._POST
 
 	# Handle folder creation
 	if 'newfolder' in req._POST and csrfcheck(req):
@@ -100,8 +98,6 @@ def page_index(req):
 	# Handle file uploads
 	if 'fileupload' in req._POST:
 		files = req._POST['fileupload']
-		print type(files)
-		print files
 		if type(files) != list:
 			files = [files]
 		if files[-1].filename:

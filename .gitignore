@@ -1,5 +1,5 @@
 *.pyc
 *.pyo
-files/*
+data/*
 *.cfg
 plugins/oc_pw.py

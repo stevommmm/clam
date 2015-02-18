@@ -14,5 +14,8 @@ def call(event_name, req, *args):
 	retdata = []
 	for x in hooks[event_name]:
 		logger.debug('Dispatched "%s" to "%s:%s" with args %s', event_name, x.__name__, x.func_code.co_filename.split(os.sep)[-1], str(args))
-		retdata.append(x(req, *args))
+		try:
+			retdata.append(x(req, *args))
+		except Exception as e:
+			logger.critical(e)
 	return retdata 
