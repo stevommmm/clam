@@ -3,7 +3,7 @@ import os
 import itertools
 import urlparse
 from config import config
-from customstorage import ClamFieldStorage
+from util import ClamFieldStorage
 
 import logging
 logging.basicConfig(format='%(process)-6d %(levelname)-8s %(message)s', level=logging.DEBUG)
