@@ -4,6 +4,10 @@ from clam import config
 
 
 class ClamFieldStorage(cgi.FieldStorage):
+	def make_file(self, binary=None):
+		import tempfile
+    	return tempfile.TemporaryFile("w+b", dir=config.tmp_root)
+
 	def __repr__(self):
 		return "FieldStorage(%r, %r, ...)" % ( self.name, self.filename)
 
