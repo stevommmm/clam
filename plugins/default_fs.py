@@ -17,6 +17,44 @@ def humb(size):
 def total_seconds(td):
 	return (td.microseconds + (td.seconds + td.days * 24 * 3600) * 1e6) / 1e6
 
+class defaultfilesystem(hook.filesystem):
+	def __init__(self, username, directory=os.sep):
+		self.username = username
+		self.root = os.path.abspath(os.path.join(config.file_root, username, 'files')) + os.sep
+		self.cwdname = directory
+		self.cwd = os.path.join(self.root, directory.lstrip(os.sep))
+		assert self.cwd.startswith(config.root)
+		assert self.root.startswith(config.file_root), 'Invalid root: ' + self.root
+		assert self.cwd.startswith(config.file_root), 'Invalid cwd: ' + self.cwd
+
+	def file_read(self, filename):
+		fullpath = os.path.join(self.cwd, filename)
+		assert fullpath.startswith(self.cwd), 'Invalid file path'
+		with open(fullpath, 'r') as inf:
+			return [inf.read()]
+
+	def directory_read(self):
+		if self.cwd != self.root:
+			yield {
+				'isdir': True,
+				'name': '...',
+				'size': '',
+				'path': os.sep.join(self.cwdname.rstrip(os.sep).split(os.sep)[:-1]),
+			}
+
+		for x in os.listdir(self.cwd):
+			isdir = os.path.isdir(os.path.join(self.cwd, x))
+			yield {
+				'isdir': isdir, 
+				'name': x, 
+				'size': humb(os.path.getsize(os.path.join(self.cwd, x))) if not isdir else '',
+				'path': os.path.join(self.cwdname, x) if isdir else self.cwdname,
+			}
+
+
+
+
+
 def safepath(directory, username='', exists=True):
 	assert directory.startswith(config.file_root), "403, Access denied."
 	assert directory.startswith(os.path.join(config.file_root, username)), "403, Access denied. User traversal."

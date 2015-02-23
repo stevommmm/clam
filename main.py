@@ -112,17 +112,23 @@ def page_index(req):
 			req.redirect = '/?dir=' + p_dirname
 			return
 
-		filelist = itertools.chain.from_iterable(hook.call('directory_list', username, path))
+		fs = hook.filesystem(username, dirname)
+		print list(fs.directory_read())
+
+		# filelist = itertools.chain.from_iterable(hook.call('directory_list', username, path))
+		filelist = fs.directory_read()
 		content = []
 		# If we are in the root don't add a "parent" option
-		if not path == util.absjoin(config.file_root, username, 'files'):
-			content.append(templates.parent(dirname=p_dirname, filename='..'))
+		# if not path == util.absjoin(config.file_root, username, 'files'):
+		# 	content.append(templates.parent(dirname=p_dirname, filename='..'))
 
 		for f in filelist:
-			if f[0]:
-				content.append(templates.directory(dirname=os.path.join(dirname, f[1]), filename=f[1]))
+			if f['isdir']:
+				# content.append(templates.directory(dirname=os.path.join(dirname, f[1]), filename=f[1]))
+				content.append(templates.directory(**f))
 			else:
-				content.append(templates.file(dirname=dirname, filename=f[1], fsize=f[2]))
+				content.append(templates.file(**f))
+				# content.append(templates.file(dirname=dirname, filename=f[1], fsize=f[2]))
 
 		return templates.index(
 			title=os.sep if not dirname else dirname,
