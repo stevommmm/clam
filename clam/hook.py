@@ -53,9 +53,11 @@ class filesystem(object):
 		return {'disk_percent': int(100 - (100 * float(freegb) / float(totalgb))), 'disk_ingb': freegb}
 
 	def file_read(self, filename):
+		logger.info('file read %s', filename)
 		return [c.file_read(filename) for c in self.children]
 
 	def file_write(self, filename, content):
+		logger.info('file write %s', filename)
 		return [c.file_write(filename, content) for c in self.children]
 
 	def file_delete(self, filename):

@@ -142,13 +142,20 @@
 				var progress_used = document.createElement("div");
 				progress_used.className = "bar-used";
 				progress.appendChild(progress_used);
-				o.appendChild(document.createTextNode("Uploading: " + file.name));
+				var tn = document.createTextNode("Uploading: " + file.name);
+				o.appendChild(tn);
 				o.appendChild(progress);
 
 				// progress bar
 				xhr.upload.addEventListener("progress", function(e) {
 					var pc = parseInt((e.loaded / e.total * 100));
 					progress_used.style.width = pc + "%";
+					if (pc >= 98) {
+						tn.data = "Finalising " + file.name;
+					}
+					if (pc == 100) {
+						tn.data = "Complete " + file.name;
+					}
 				}, false);
 
 				// file received/failed

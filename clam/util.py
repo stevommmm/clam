@@ -11,19 +11,6 @@ class ClamFieldStorage(cgi.FieldStorage):
 	def __repr__(self):
 		return "FieldStorage(%r, %r, ...)" % ( self.name, self.filename)
 
-
-def path(username, directory=None, filepath=None):
-	user_root = absjoin(config.file_root, username, 'files')
-	assert user_root.startswith(config.file_root), "403, Access denied."
-
-	dir_root = absjoin(user_root, directory)
-	assert dir_root.startswith(user_root), "403, Access denied."
-
-	file_root = absjoin(dir_root, filepath)
-	assert dir_root.startswith(dir_root), "403, Access denied."
-
-	return file_root
-
 def absjoin(*args):
 	return os.path.abspath(
 		os.path.join(*args)
@@ -37,13 +24,3 @@ def softdir(directory):
 		return directory.rstrip(os.sep).split(os.sep)[-1]
 	except IndexError:
 		return '/'
-
-def safepath(directory, username='', exists=True):
-	assert directory.startswith(config.file_root), "403, Access denied."
-	assert directory.startswith(os.path.join(config.file_root, username)), "403, Access denied. User traversal."
-	if not exists:
-		return True
-	assert os.path.exists(directory), "404, File does not exist."
-	assert not os.path.islink(directory), "404, File does not exist."
-	assert os.access(directory, os.R_OK), "403, You do not have permission to access this file."
-	return True
