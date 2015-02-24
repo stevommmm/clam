@@ -12,6 +12,7 @@ class testfilesystem(hook.filesystem):
 		return (0, 0)
 
 	def file_read(self, *args):
+		"""Only one plugin can return data here, don't even return an empty string"""
 		pass
 
 	def file_write(self, *args):
