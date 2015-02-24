@@ -153,14 +153,12 @@
 					if (pc >= 98) {
 						tn.data = "Finalising " + file.name;
 					}
-					if (pc == 100) {
-						tn.data = "Complete " + file.name;
-					}
 				}, false);
 
 				// file received/failed
 				xhr.onreadystatechange = function(e) {
 					if (xhr.readyState == 4) {
+						tn.data = "Complete " + file.name;
 						progress_used.className = (xhr.status == 200 ? "bar-used success" : "bar-used failure");
 					}
 				};

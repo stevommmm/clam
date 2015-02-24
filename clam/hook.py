@@ -1,7 +1,10 @@
 import collections
 import os
 import itertools
+import hashlib
+from Cookie import SimpleCookie
 from clam import logger
+from clam import config
 
 hooks = collections.defaultdict(list)
 
@@ -77,3 +80,19 @@ class filesystem(object):
 
 class session(object):
 	__metaclass__ = inheritors
+
+	def __init__(self, request):
+		self.children = []
+		for c in session.__inheritors__[session]:
+			self.children.append(c(request))
+
+	def set(self, username, expires=None):
+		logger.info('set sess %s', username)
+		return [c.set(username, expires) for c in self.children]
+
+	def expire(self):
+		return [c.expire() for c in self.children]
+
+	def get(self):
+		logger.info('get sess')
+		return [c.get() for c in self.children]

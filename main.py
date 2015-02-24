@@ -11,14 +11,14 @@ from plugins import *
 application = clamengine()
 
 def csrfcheck(req):
-	username = hook.call('get_session', req)[-1]
+	s = hook.session(req)
+	username = s.get()[-1]
 	if username:
 		cs = req._POST.getvalue('cs')
 		if cs:
 			if cs == hashlib.sha1(username + config.secret).hexdigest():
 				return True
 	return false
-
 
 @application.route('^/style.css$')
 def rstyle(req):
@@ -35,9 +35,11 @@ def page_login(req):
 
 		un = un.lower()
 		if any(hook.call('verify_user_password', req, un, pw)):
-			hook.call('set_session', req, un)
-			req.redirect = '/'
-			return
+			s = hook.session(req)
+			if any(s.set(un)):
+			# hook.call('set_session', req, un)
+				req.redirect = '/'
+				return
 
 	return templates.login()
 
@@ -45,12 +47,15 @@ def page_login(req):
 def page_logout(req):
 	if req.method == "POST":
 		if csrfcheck(req):
-			hook.call('set_session', req, '-', 'Thu, 01 Jan 1970 00:00:00 GMT')
+			s = hook.session(req)
+			list(s.expire())
+			# hook.call('set_session', req, '-', 'Thu, 01 Jan 1970 00:00:00 GMT')
 	req.redirect = '/'
 
 @application.route('^/$')
 def page_index(req):
-	username = hook.call('get_session', req)[-1]
+	s = hook.session(req)
+	username = list(s.get())[-1]
 	if not username:
 		req.redirect = '/login'
 		return
@@ -140,7 +145,7 @@ def page_index(req):
 				return 'OK'
 			return 'Error'
 		else:
-			f = list(hook.call('file_read', req, username, path, filename))
+			f = list(fs.file_read(filename))
 			if len(f) > 1:
 				logger.critical('File read response from multiple hooks')
 			return f[0]
