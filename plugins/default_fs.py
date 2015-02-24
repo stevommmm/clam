@@ -30,6 +30,12 @@ class defaultfilesystem(hook.filesystem):
 	def getcwd(self):
 		return self.cwd
 
+	def getusage(self):
+		s = os.statvfs(self.cwd)
+		freegb = s.f_bavail * s.f_frsize / 1024 / 1024 / 1024
+		totalgb = s.f_blocks * s.f_frsize / 1024 / 1024 / 1024
+		return (freegb, totalgb)
+
 	def file_read(self, filename):
 		fullpath = os.path.join(self.cwd, filename)
 		assert fullpath.startswith(self.cwd), 'Invalid file path'

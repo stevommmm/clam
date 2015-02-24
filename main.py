@@ -105,7 +105,7 @@ def page_index(req):
 			return 'OK'
 
 	# Handle directory list or delete
-	if os.path.isdir(fs.getcwd()):
+	if not filename:
 		if 'delete' in req._GET and dirname != '':
 			if any(fs.directory_delete(dirname)):
 				req.redirect = '/?dir=' + p_dirname
@@ -129,11 +129,11 @@ def page_index(req):
 			username=username,
 			content=templates.filelist(content='\n'.join(content)),
 			cs=hashlib.sha1(username + config.secret).hexdigest(),
-			**util.getspace()
+			**fs.getusage()
 		)
 
 	# Handle file read or delete
-	if os.path.isfile(path):
+	if filename:
 		if 'delete' in req._GET and filename != '':
 			if any(fs.file_delete(filename)):
 				req.redirect ='/?dir=' + dirname

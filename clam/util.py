@@ -47,9 +47,3 @@ def safepath(directory, username='', exists=True):
 	assert not os.path.islink(directory), "404, File does not exist."
 	assert os.access(directory, os.R_OK), "403, You do not have permission to access this file."
 	return True
-
-def getspace():
-	s = os.statvfs(config.root)
-	freegb = s.f_bavail * s.f_frsize / 1024 / 1024 / 1024
-	totalgb = s.f_blocks * s.f_frsize / 1024 / 1024 / 1024
-	return {'disk_percent': int(100 - (100 * float(freegb) / float(totalgb))), 'disk_ingb': freegb}
