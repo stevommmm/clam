@@ -5,7 +5,8 @@ from clam import hook
 import hashlib
 
 
-class session(hook.session):
+class defaultsession(hook.session):
+	"""cookie based sesssion handler"""
 
 	def __init__(self, request):
 		self.req = request

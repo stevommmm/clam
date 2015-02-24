@@ -31,8 +31,11 @@ class inheritors(type):
 	def __new__(meta, name, bases, dct):
 		klass = type.__new__(meta, name, bases, dct)
 		for base in klass.mro()[1:-1]:
+			for x in bases[0].__subclasses__():
+				logger.info('Registered %s', x.__name__)
 			meta.__inheritors__[base].append(klass)
 		return klass
+
 
 class filesystem(object):
 	__metaclass__ = inheritors
