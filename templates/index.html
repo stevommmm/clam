@@ -118,7 +118,10 @@
 
 	<script type="text/javascript">
 		function FileSelectHandler(e) {
-			console.log(e);
+			// Change the close button action
+			var uplb = document.getElementById('upload');
+			uplb.nextElementSibling.nextElementSibling.href = "javascript:location.reload()";
+
 			// fetch FileList object
 			var files = e.files || e.dataTransfer.files;
 
@@ -141,8 +144,6 @@
 				progress.appendChild(progress_used);
 				o.appendChild(document.createTextNode("Uploading: " + file.name));
 				o.appendChild(progress);
-
-				console.log(file);
 
 				// progress bar
 				xhr.upload.addEventListener("progress", function(e) {

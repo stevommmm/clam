@@ -73,23 +73,17 @@ def page_index(req):
 	p_dirname = util.parentdir(dirname)
 	s_dirname = util.softdir(dirname)
 
-	# Create absolute path of file or folder, used for security below
-	path = util.path(
-		username,
-		dirname,
-		filename,
-	)
 
 	# Protect us from writing to places we don't want
 	try:
-		util.safepath(path, username)
+		fs = hook.filesystem(username, dirname)
 	except AssertionError as e:
 		return e.message
 
 	# Handle folder creation
 	if 'newfolder' in req._POST and csrfcheck(req):
 		nfolder = req._POST.getvalue('newfolder')
-		if any(hook.call('directory_create', username, path, nfolder)):
+		if any(fs.directory_write(nfolder)):
 			req.redirect = '/?dir=' + dirname
 			return
 
@@ -100,35 +94,35 @@ def page_index(req):
 			files = [files]
 		if files[-1].filename:
 			for f in files:
-				list(hook.call('file_create', username, path, f))
+				if not f.file:
+					break
+				fn = f.filename
+				if not fn or fn.startswith('.'): #dont allow uploading dot files
+					break
+				if any(fs.file_write(fn, f.file)):
+					logger.info("Wrote %s to storage", fn)
 
-			# req.redirect = '/?dir=' + dirname
 			return 'OK'
 
 	# Handle directory list or delete
-	if os.path.isdir(path):
-		if 'delete' in req._GET:
-			hook.call('directory_delete', username, path)
-			req.redirect = '/?dir=' + p_dirname
-			return
+	if os.path.isdir(fs.getcwd()):
+		if 'delete' in req._GET and dirname != '':
+			if any(fs.directory_delete(dirname)):
+				req.redirect = '/?dir=' + p_dirname
+				return 'OK'
+			return 'Error'
 
-		fs = hook.filesystem(username, dirname)
-		print list(fs.directory_read())
-
-		# filelist = itertools.chain.from_iterable(hook.call('directory_list', username, path))
 		filelist = fs.directory_read()
 		content = []
-		# If we are in the root don't add a "parent" option
-		# if not path == util.absjoin(config.file_root, username, 'files'):
-		# 	content.append(templates.parent(dirname=p_dirname, filename='..'))
 
 		for f in filelist:
 			if f['isdir']:
-				# content.append(templates.directory(dirname=os.path.join(dirname, f[1]), filename=f[1]))
-				content.append(templates.directory(**f))
+				if f['name'] == '..':
+					content.append(templates.parent(**f))
+				else:
+					content.append(templates.directory(**f))
 			else:
 				content.append(templates.file(**f))
-				# content.append(templates.file(dirname=dirname, filename=f[1], fsize=f[2]))
 
 		return templates.index(
 			title=os.sep if not dirname else dirname,
@@ -140,9 +134,11 @@ def page_index(req):
 
 	# Handle file read or delete
 	if os.path.isfile(path):
-		if 'delete' in req._GET:
-			hook.call('file_delete', req, username, path)
-			req.redirect ='/?dir=' + dirname
+		if 'delete' in req._GET and filename != '':
+			if any(fs.file_delete(filename)):
+				req.redirect ='/?dir=' + dirname
+				return 'OK'
+			return 'Error'
 		else:
 			f = list(hook.call('file_read', req, username, path, filename))
 			if len(f) > 1:

@@ -39,23 +39,32 @@ class filesystem(object):
 		for c in filesystem.__inheritors__[filesystem]:
 			self.children.append(c(username, directory))
 
+	def getcwd(self):
+		mc = collections.Counter(itertools.chain.from_iterable([c.getcwd() for c in self.children]))
+		try:
+			return mc.most_common(1)[0][0]
+		except IndexError:
+			raise ValueError('No plugins returned a valid CWD')
+
 	def file_read(self, filename):
-		return itertools.chain.from_iterable([c.file_read(filename) for c in self.children])
+		return [c.file_read(filename) for c in self.children]
 
 	def file_write(self, filename, content):
-		return itertools.chain.from_iterable([c.file_write(filename, content) for c in self.children])
+		return [c.file_write(filename, content) for c in self.children]
 
 	def file_delete(self, filename):
-		return itertools.chain.from_iterable([c.file_delete(filename) for c in self.children])
+		logger.info('file del %s', filename)
+		return [c.file_delete(filename) for c in self.children]
 
 	def directory_read(self):
 		return itertools.chain.from_iterable([c.directory_read() for c in self.children])
 
 	def directory_write(self, dirname):
-		return itertools.chain.from_iterable([c.directory_write(dirname) for c in self.children])
+		return [c.directory_write(dirname) for c in self.children]
 
-	def directory_delete(self):
-		return itertools.chain.from_iterable([c.directory_delete() for c in self.children])
+	def directory_delete(self, dirname):
+		logger.info('dir del %s', dirname)
+		return [c.directory_delete(dirname) for c in self.children]
 
 
 class session(object):
