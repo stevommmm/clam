@@ -6,25 +6,6 @@ from Cookie import SimpleCookie
 from clam import logger
 from clam import config
 
-hooks = collections.defaultdict(list)
-
-
-def register(event_name, func):
-	logger.info('Registered "%s" for event "%s:%s"', event_name, func.__name__, func.func_code.co_filename.split(os.sep)[-1])
-	hooks[event_name].append(func)
-
-
-def call(event_name, req, *args):
-	retdata = []
-	for x in hooks[event_name]:
-		logger.debug('Dispatched "%s" to "%s:%s" with args %s', event_name, x.__name__, x.func_code.co_filename.split(os.sep)[-1], str(args))
-		try:
-			retdata.append(x(req, *args))
-		except Exception as e:
-			logger.critical(e)
-	return retdata 
-
-
 class inheritors(type):
 	__inheritors__ = collections.defaultdict(list)
 
@@ -58,15 +39,12 @@ class filesystem(object):
 		return {'disk_percent': int(100 - (100 * float(freegb) / float(totalgb))), 'disk_ingb': freegb}
 
 	def file_read(self, filename):
-		logger.info('file read %s', filename)
-		return [c.file_read(filename) for c in self.children]
+		return filter(None, [c.file_read(filename) for c in self.children])
 
 	def file_write(self, filename, content):
-		logger.info('file write %s', filename)
 		return [c.file_write(filename, content) for c in self.children]
 
 	def file_delete(self, filename):
-		logger.info('file del %s', filename)
 		return [c.file_delete(filename) for c in self.children]
 
 	def directory_read(self):
@@ -76,7 +54,6 @@ class filesystem(object):
 		return [c.directory_write(dirname) for c in self.children]
 
 	def directory_delete(self, dirname):
-		logger.info('dir del %s', dirname)
 		return [c.directory_delete(dirname) for c in self.children]
 
 
@@ -89,12 +66,24 @@ class session(object):
 			self.children.append(c(request))
 
 	def set(self, username, expires=None):
-		logger.info('set sess %s', username)
 		return [c.set(username, expires) for c in self.children]
 
 	def expire(self):
 		return [c.expire() for c in self.children]
 
 	def get(self):
-		logger.info('get sess')
 		return [c.get() for c in self.children]
+
+class authentication(object):
+	__metaclass__ = inheritors
+
+	def __init__(self, username):
+		self.children = []
+		for c in authentication.__inheritors__[authentication]:
+			self.children.append(c(username))
+
+	def password_verify(self, password):
+		return [c.password_verify(password) for c in self.children]
+
+	def password_set(self, password):
+		return [c.password_set(password) for c in self.children]

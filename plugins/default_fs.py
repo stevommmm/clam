@@ -39,8 +39,8 @@ class defaultfilesystem(hook.filesystem):
 	def file_read(self, filename):
 		fullpath = os.path.join(self.cwd, filename)
 		assert fullpath.startswith(self.cwd), 'Invalid file path'
-		with open(fullpath, 'r') as inf:
-			return [inf.read()]
+		with open(fullpath, 'rb') as inf:
+			return inf.read()
 
 	def file_write(self, filename, fh):
 		fullpath = os.path.join(self.cwd, filename)
@@ -69,6 +69,7 @@ class defaultfilesystem(hook.filesystem):
 				'name': '..',
 				'size': '',
 				'path': os.sep.join(self.cwdname.rstrip(os.sep).split(os.sep)[:-1]),
+				'actions': [],
 			}
 
 		for x in os.listdir(self.cwd):
@@ -78,6 +79,7 @@ class defaultfilesystem(hook.filesystem):
 				'name': x, 
 				'size': humb(os.path.getsize(os.path.join(self.cwd, x))) if not isdir else '',
 				'path': os.path.join(self.cwdname, x) if isdir else self.cwdname,
+				'actions': [] if isdir else ['delete'],
 			}
 
 	def directory_write(self, dirname):

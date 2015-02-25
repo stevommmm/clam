@@ -21,12 +21,12 @@ def csrfcheck(req):
 	return false
 
 @application.route('^/style.css$')
-def rstyle(req):
-	req.headers = [('content-type', 'text/css')]
+def rstyle(start_response, req):
+	start_response('200 OK', [('content-type', 'text/css')])
 	return templates.style()
 
 @application.route('^/login$')
-def page_login(req):
+def page_login(start_response, req):
 	if req.method == 'POST':
 		un = req._POST.getvalue('username')
 		pw = req._POST.getvalue('password')
@@ -34,26 +34,26 @@ def page_login(req):
 			return templates.login()
 
 		un = un.lower()
-		if any(hook.call('verify_user_password', req, un, pw)):
+		auth = hook.authentication(un)
+		if any(auth.password_verify(pw)):
 			s = hook.session(req)
 			if any(s.set(un)):
-			# hook.call('set_session', req, un)
 				req.redirect = '/'
 				return
 
+	start_response('200 OK', req.headers)
 	return templates.login()
 
 @application.route('^/logout$')
-def page_logout(req):
+def page_logout(start_response, req):
 	if req.method == "POST":
 		if csrfcheck(req):
 			s = hook.session(req)
 			list(s.expire())
-			# hook.call('set_session', req, '-', 'Thu, 01 Jan 1970 00:00:00 GMT')
-	req.redirect = '/'
+	start_response('301 Redirect', [('Location', '/')])
 
 @application.route('^/$')
-def page_index(req):
+def page_index(start_response, req):
 	s = hook.session(req)
 	username = list(s.get())[-1]
 	if not username:
@@ -63,8 +63,9 @@ def page_index(req):
 	if 'oldpass' in req._POST and 'newpass' in req._POST and csrfcheck(req):
 		oldp = req._POST.getvalue('oldpass')
 		newp = req._POST.getvalue('newpass')
-		if any(hook.call('verify_user_password', req, username, oldp)):
-			hook.call('set_user_password', username, newp)
+		auth = hook.authentication(username)
+		if any(auth.password_verify(pw)):
+			list(auth.password_set(newp))
 	
 	dirname = ''
 	if 'dir' in req._GET:
@@ -89,7 +90,7 @@ def page_index(req):
 	if 'newfolder' in req._POST and csrfcheck(req):
 		nfolder = req._POST.getvalue('newfolder')
 		if any(fs.directory_write(nfolder)):
-			req.redirect = '/?dir=' + dirname
+			start_response('301 Redirect', [('Location', '/?dir=' + dirname)])
 			return
 
 	# Handle file uploads
@@ -106,16 +107,17 @@ def page_index(req):
 					break
 				if any(fs.file_write(fn, f.file)):
 					logger.info("Wrote %s to storage", fn)
-
+			start_response('200 OK', req.headers)
 			return 'OK'
 
 	# Handle directory list or delete
 	if not filename:
 		if 'delete' in req._GET and dirname != '':
 			if any(fs.directory_delete(dirname)):
-				req.redirect = '/?dir=' + p_dirname
-				return 'OK'
-			return 'Error'
+				start_response('301 Redirect', [('Location', '/?dir=' + dirname)])
+			else:
+				start_response('500 Internal Server Error', req.headers)
+			return
 
 		filelist = fs.directory_read()
 		content = []
@@ -129,6 +131,7 @@ def page_index(req):
 			else:
 				content.append(templates.file(**f))
 
+		start_response('200 OK', req.headers)
 		return templates.index(
 			title=os.sep if not dirname else dirname,
 			username=username,
@@ -141,13 +144,21 @@ def page_index(req):
 	if filename:
 		if 'delete' in req._GET and filename != '':
 			if any(fs.file_delete(filename)):
-				req.redirect ='/?dir=' + dirname
-				return 'OK'
-			return 'Error'
+				start_response('301 Redirect', [('Location', '/?dir=' + dirname)])
+			else:
+				start_response('500 Internal Server Error', req.headers)
+			return
 		else:
 			f = list(fs.file_read(filename))
 			if len(f) > 1:
 				logger.critical('File read response from multiple hooks')
+
+			req.headers = [('content-disposition', 'filename="%s"' % filename)]
+			import mimetypes
+			mtype = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+			if mtype:
+				req.headers.append(('content-type', mtype))
+			start_response('200 OK', req.headers)
 			return f[0]
 
 		

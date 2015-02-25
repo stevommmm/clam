@@ -224,9 +224,14 @@ footer {
 	background-color: #D45E4E;
 }
 
+#progress {
+	max-height: 50%;
+	overflow: auto;
+}
+
 /* modal */
 #fullpage {
-	position: absolute; 
+	position: fixed; 
 	top:0;
 	bottom:0; 
 	left:0;
