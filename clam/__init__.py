@@ -19,10 +19,14 @@ class request(dict):
 	def __init__(self, environ, re_args):
 		self.args = re_args
 		self.headers = [('content-type', 'text/html')]
+		self.status = '200 OK'
 		self.method = environ['REQUEST_METHOD']
 		self._ENV = environ
 		self._GET = self.__split_get()
 		self._POST = self.__split_post()
+
+	def set_status(self, status):
+		self.status = status
 
 	def __split_get(self):
 		return urlparse.parse_qs(self._ENV.get('QUERY_STRING', ''), keep_blank_values=True)
@@ -48,7 +52,7 @@ class clamengine(object):
 			if not f:
 				f = reg_search.groups()
 			return f
-		
+
 		path = environ['PATH_INFO']
 	
 		for reg_path in self.routes.items():
@@ -56,11 +60,14 @@ class clamengine(object):
 			if reg_search:
 				try:
 					req = request(environ, _fmt_grps(reg_search))
-					return ''.join(reg_path[1](start_response, req))
+					func_output = reg_path[1](req)
+					if func_output:
+						func_output = ''.join(func_output)
+					start_response(req.status, req.headers)
+					return func_output or ''
 				except Exception as e:
-					logger.error(e.message)
 					import traceback
-					traceback.print_exc()
+					logger.error("%s\t%s", e, traceback.format_exc())
 					start_response('500 Internal Server Error', [('content-type', 'text/plain')], sys.exc_info())
 					return repr(e)
 

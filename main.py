@@ -1,14 +1,21 @@
 #!/usr/bin/env python
+import hashlib
+import itertools
+import json
 import os
 import sys
-import hashlib
 import time
-import itertools
 from clam import clamengine, request, util, hook, config, logger
-from templates import templates
 from plugins import *
+from templates import templates
 
 application = clamengine()
+
+@application.route('^/debug$')
+def rdebug(req):
+	req.set_status("301 Redirect")
+	req.headers = [('Location', '/')]
+	return ''
 
 def csrfcheck(req):
 	s = hook.session(req)
@@ -21,12 +28,12 @@ def csrfcheck(req):
 	return false
 
 @application.route('^/style.css$')
-def rstyle(start_response, req):
-	start_response('200 OK', [('content-type', 'text/css')])
+def rstyle(req):
+	req.headers = [('content-type', 'text/css')]
 	return templates.style()
 
 @application.route('^/login$')
-def page_login(start_response, req):
+def page_login(req):
 	if req.method == 'POST':
 		un = req._POST.getvalue('username')
 		pw = req._POST.getvalue('password')
@@ -41,23 +48,25 @@ def page_login(start_response, req):
 				req.redirect = '/'
 				return
 
-	start_response('200 OK', req.headers)
 	return templates.login()
 
 @application.route('^/logout$')
-def page_logout(start_response, req):
+def page_logout(req):
 	if req.method == "POST":
 		if csrfcheck(req):
 			s = hook.session(req)
 			list(s.expire())
-	start_response('301 Redirect', [('Location', '/')])
+
+	req.set_status("301 Redirect")
+	req.headers = [('Location', '/')]
 
 @application.route('^/$')
-def page_index(start_response, req):
+def page_index(req):
 	s = hook.session(req)
 	username = list(s.get())[-1]
 	if not username:
-		req.redirect = '/login'
+		req.set_status("301 Redirect")
+		req.headers = [('Location', '/login')]
 		return
 
 	if 'oldpass' in req._POST and 'newpass' in req._POST and csrfcheck(req):
@@ -90,8 +99,9 @@ def page_index(start_response, req):
 	if 'newfolder' in req._POST and csrfcheck(req):
 		nfolder = req._POST.getvalue('newfolder')
 		if any(fs.directory_write(nfolder)):
-			start_response('301 Redirect', [('Location', '/?dir=' + dirname)])
-			return 'OK'
+			req.set_status("301 Redirect")
+			req.headers = [('Location', '/?dir=' + dirname)]
+		return
 
 	# Handle file uploads
 	if 'fileupload' in req._POST:
@@ -107,15 +117,15 @@ def page_index(start_response, req):
 					break
 				if any(fs.file_write(fn, f.file)):
 					logger.info("Wrote %s to storage", fn)
-			start_response('200 OK', req.headers)
-			return 'OK'
+		return
 
 	# Handle filesystem actions like delete
 	for action in [x for x in req._GET.keys() if x not in ['dir', 'file']]:
 		racton = filter(None, fs.action(action, filename))
 		if racton:
-			start_response('301 Redirect', [('Location', '/?dir=' + racton[0])])
-			return 'OK'
+			req.set_status("301 Redirect")
+			req.headers = [('Location', '/?dir=' + racton[0])]
+			return
 
 	# Handle directory list or delete
 	if not filename:
@@ -134,8 +144,6 @@ def page_index(start_response, req):
 			else:
 				content.append(templates.file(**f))
 
-
-		start_response('200 OK', req.headers)
 		return templates.index(
 			title=os.sep if not dirname else dirname,
 			username=username,
@@ -155,7 +163,6 @@ def page_index(start_response, req):
 		mtype = mimetypes.guess_type(filename)[0] or "application/octet-stream"
 		if mtype:
 			req.headers.append(('content-type', mtype))
-		start_response('200 OK', req.headers)
 		return f[0]
 
 		
