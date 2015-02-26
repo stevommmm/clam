@@ -27,11 +27,18 @@ Each file returned in the directory listing method must provide a list of action
     
     def directory_read(self):
         return [{
-			'isdir': False, 'name': 'MEOW.dat', 'file': 'example.dat',	'size': '100 GB', 'path': '', 'actions': ["customact"],
+			'isdir': False, 
+			'name': 'MEOW.dat',
+			'file': 'example.dat',	
+			'size': '100 GB', 
+			'path': '', 
+			'actions': ["customact"],
 		}]
         
     def action_customact(self, filename):
-        """Implement whatever function should be taken in here, a great example is action_delete in default_fs.py"""
+        """Implement whatever function should be taken in here, 
+        a great example is action_delete in default_fs.py
+        """
         pass
         
     ...
