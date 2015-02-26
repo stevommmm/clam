@@ -91,7 +91,7 @@ def page_index(start_response, req):
 		nfolder = req._POST.getvalue('newfolder')
 		if any(fs.directory_write(nfolder)):
 			start_response('301 Redirect', [('Location', '/?dir=' + dirname)])
-			return
+			return 'OK'
 
 	# Handle file uploads
 	if 'fileupload' in req._POST:
@@ -110,26 +110,30 @@ def page_index(start_response, req):
 			start_response('200 OK', req.headers)
 			return 'OK'
 
+	# Handle filesystem actions like delete
+	for action in [x for x in req._GET.keys() if x not in ['dir', 'file']]:
+		racton = filter(None, fs.action(action, filename))
+		if racton:
+			start_response('301 Redirect', [('Location', '/?dir=' + racton[0])])
+			return 'OK'
+
 	# Handle directory list or delete
 	if not filename:
-		if 'delete' in req._GET and dirname != '':
-			if any(fs.directory_delete(dirname)):
-				start_response('301 Redirect', [('Location', '/?dir=' + dirname)])
-			else:
-				start_response('500 Internal Server Error', req.headers)
-			return
-
 		filelist = fs.directory_read()
 		content = []
 
 		for f in filelist:
+			# Horrible hacky actions templating
+			shadow_actions = []
+			for ac in f['actions']:
+				shadow_actions.append(templates.actions(path=f['path'], name=f['name'], file=f['file'], action=ac))
+			f['actions'] = shadow_actions
+
 			if f['isdir']:
-				if f['name'] == '..':
-					content.append(templates.parent(**f))
-				else:
-					content.append(templates.directory(**f))
+				content.append(templates.directory(**f))
 			else:
 				content.append(templates.file(**f))
+
 
 		start_response('200 OK', req.headers)
 		return templates.index(
@@ -142,24 +146,17 @@ def page_index(start_response, req):
 
 	# Handle file read or delete
 	if filename:
-		if 'delete' in req._GET and filename != '':
-			if any(fs.file_delete(filename)):
-				start_response('301 Redirect', [('Location', '/?dir=' + dirname)])
-			else:
-				start_response('500 Internal Server Error', req.headers)
-			return
-		else:
-			f = list(fs.file_read(filename))
-			if len(f) > 1:
-				logger.critical('File read response from multiple hooks')
+		f = list(fs.file_read(filename))
+		if len(f) > 1:
+			logger.critical('File read response from multiple hooks')
 
-			req.headers = [('content-disposition', 'filename="%s"' % filename)]
-			import mimetypes
-			mtype = mimetypes.guess_type(filename)[0] or "application/octet-stream"
-			if mtype:
-				req.headers.append(('content-type', mtype))
-			start_response('200 OK', req.headers)
-			return f[0]
+		req.headers = [('content-disposition', 'filename="%s"' % filename)]
+		import mimetypes
+		mtype = mimetypes.guess_type(filename)[0] or "application/octet-stream"
+		if mtype:
+			req.headers.append(('content-type', mtype))
+		start_response('200 OK', req.headers)
+		return f[0]
 
 		
 if __name__ == '__main__':

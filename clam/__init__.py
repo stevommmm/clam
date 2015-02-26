@@ -1,5 +1,6 @@
 import re
 import os
+import sys
 import itertools
 import urlparse
 from config import config
@@ -57,9 +58,11 @@ class clamengine(object):
 					req = request(environ, _fmt_grps(reg_search))
 					return ''.join(reg_path[1](start_response, req))
 				except Exception as e:
-					logger.error(e)
-					# start_response('500 Internal Server Error', [('content-type', 'text/html')])
-					return (repr(e),)
+					logger.error(e.message)
+					import traceback
+					traceback.print_exc()
+					start_response('500 Internal Server Error', [('content-type', 'text/plain')], sys.exc_info())
+					return repr(e)
 
 		start_response('404 NOT FOUND', [('content-type', 'text/html')])
 		return ('Not Found',)

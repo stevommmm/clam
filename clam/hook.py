@@ -25,6 +25,11 @@ class filesystem(object):
 		for c in filesystem.__inheritors__[filesystem]:
 			self.children.append(c(username, directory))
 
+	def action(self, action, filename):
+		for c in self.children:
+			if hasattr(c, 'action_%s' % action):
+				yield getattr(c, 'action_%s' % action)(filename)
+
 	def getcwd(self):
 		mc = collections.Counter(itertools.chain.from_iterable([c.getcwd() for c in self.children]))
 		try:
@@ -44,17 +49,11 @@ class filesystem(object):
 	def file_write(self, filename, content):
 		return [c.file_write(filename, content) for c in self.children]
 
-	def file_delete(self, filename):
-		return [c.file_delete(filename) for c in self.children]
-
 	def directory_read(self):
 		return itertools.chain.from_iterable([c.directory_read() for c in self.children])
 
 	def directory_write(self, dirname):
 		return [c.directory_write(dirname) for c in self.children]
-
-	def directory_delete(self, dirname):
-		return [c.directory_delete(dirname) for c in self.children]
 
 
 class session(object):

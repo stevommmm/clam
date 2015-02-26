@@ -18,19 +18,15 @@ class testfilesystem(hook.filesystem):
 	def file_write(self, *args):
 		pass
 
-	def file_delete(self, *args):
-		pass
-
 	def directory_write(self, *args):
-		pass
-
-	def directory_delete(self, *args):
 		pass
 
 	def directory_read(self):
 		return [{
 			'isdir': False,
 			'name': 'MEOW.dat',
+			'file': 'Meow.dat',
 			'size': '100 GB',
 			'path': '',
+			'actions': [],
 		}]

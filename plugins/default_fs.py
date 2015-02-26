@@ -40,7 +40,11 @@ class defaultfilesystem(hook.filesystem):
 		fullpath = os.path.join(self.cwd, filename)
 		assert fullpath.startswith(self.cwd), 'Invalid file path'
 		with open(fullpath, 'rb') as inf:
-			return inf.read()
+			while True:
+				x = inf.read(4096)
+				if not x:
+					break
+				yield x
 
 	def file_write(self, filename, fh):
 		fullpath = os.path.join(self.cwd, filename)
@@ -55,18 +59,12 @@ class defaultfilesystem(hook.filesystem):
 			logger.info('File write complete for location "%s", in duration "%s"', filename, total_seconds(datetime.datetime.now() - ts))
 			return onf.tell()
 
-	def file_delete(self, filename):
-		fullpath = os.path.join(self.cwd, filename)
-		assert fullpath.startswith(self.cwd), 'Invalid file path'
-		print fullpath
-		os.remove(fullpath)
-		return not os.path.exists(fullpath)
-
 	def directory_read(self):
 		if self.cwd != self.root:
 			yield {
 				'isdir': True,
 				'name': '..',
+				'file': '',
 				'size': '',
 				'path': os.sep.join(self.cwdname.rstrip(os.sep).split(os.sep)[:-1]),
 				'actions': [],
@@ -76,10 +74,11 @@ class defaultfilesystem(hook.filesystem):
 			isdir = os.path.isdir(os.path.join(self.cwd, x))
 			yield {
 				'isdir': isdir, 
-				'name': x, 
+				'name': x,
+				'file': '' if isdir else x,
 				'size': humb(os.path.getsize(os.path.join(self.cwd, x))) if not isdir else '',
 				'path': os.path.join(self.cwdname, x) if isdir else self.cwdname,
-				'actions': [] if isdir else ['delete'],
+				'actions': ['delete'],
 			}
 
 	def directory_write(self, dirname):
@@ -88,10 +87,14 @@ class defaultfilesystem(hook.filesystem):
 		os.mkdir(fullpath)
 		return os.path.isdir(fullpath)
 
-	def directory_delete(self, dirname):
-		fullpath = os.path.join(self.cwd, dirname)
-		assert fullpath.startswith(self.cwd), 'Invalid directory path'
-		print fullpath
-		import shutil
-		shutil.rmtree(fullpath)
-		return not os.path.exists(fullpath)
+	def action_delete(self, filename):
+		fullpath = os.path.join(self.cwd, filename)
+		assert fullpath.startswith(self.cwd), 'Invalid file path'
+		logger.info('Removing %s', fullpath)
+		if os.path.isdir(fullpath):
+			import shutil
+			shutil.rmtree(fullpath)
+			return os.sep.join(self.cwdname.split(os.sep)[:-1]) or os.sep
+		if os.path.isfile(fullpath):
+			os.remove(fullpath)
+			return self.cwdname
