@@ -39,7 +39,7 @@ h3, h4, h5, h6 {
 	font-weight: bold;
 }
 
-a {
+a, a:visited {
 	color:#D45E4E;
 	font-weight:400;
 	text-decoration:none;
@@ -281,9 +281,9 @@ footer {
 	margin-top: 5%;
 }
 #fullpage > *:last-child {
-	background-color: #F6E6E4;
+	background-color: #fff;
 	border: 1px solid #D45E4E;
-	box-shadow: 0 0 6px 0 #F3D2CE;
+	box-shadow: 0 0 6px 0 #D45E4E;
 }
 #fullpage > form fieldset {
 	border: none;

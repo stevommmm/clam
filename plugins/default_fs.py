@@ -91,7 +91,7 @@ class defaultfilesystem(hook.filesystem):
 		if self.cwd != self.root:
 			yield {
 				'isdir': True,
-				'name': '..',
+				'name': '&larr; back',
 				'file': '',
 				'size': '',
 				'path': os.sep.join(self.cwdname.rstrip(os.sep).split(os.sep)[:-1]),
