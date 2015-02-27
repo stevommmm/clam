@@ -61,6 +61,7 @@ class clamengine(object):
 				try:
 					req = request(environ, _fmt_grps(reg_search))
 					func_output = reg_path[1](req)
+			
 					if func_output:
 						func_output = ''.join(func_output)
 					start_response(req.status, req.headers)

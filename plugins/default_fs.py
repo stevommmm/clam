@@ -29,17 +29,17 @@ class defaultfilesystem(hook.filesystem):
 		This check can throw AssertionError at runtime.
 
 	"""
-	def __init__(self, username, directory=os.sep):
+	def __init__(self, username, directory=''):
 		""" Creates a instance of filesystem rooted in the users directory """
 		self.username = username
-		self.root = self.__absjoin(config.file_root, username, 'files') + os.sep
+		self.root = self._absjoin(config.file_root, username, 'files') + os.sep
 		self.cwdname = directory
-		self.cwd = self.__absjoin(self.root, directory.lstrip(os.sep))
-		assert self.cwd.startswith(config.root)
+		self.cwd = self._absjoin(self.root, directory.lstrip(os.sep)) + os.sep
+		assert self.cwd.startswith(self.root), 'Invalud root'
 		assert self.root.startswith(config.file_root), 'Invalid root: ' + self.root
 		assert self.cwd.startswith(config.file_root), 'Invalid cwd: ' + self.cwd
 
-	def __absjoin(self, *args):
+	def _absjoin(self, *args):
 		""" Absolute path joining, used for startswith(root) in later calls """
 		return os.path.abspath(
 			os.path.join(*args)
@@ -61,18 +61,19 @@ class defaultfilesystem(hook.filesystem):
 
 	def file_read(self, filename):
 		""" Concat the filename with the cwd(), returns a generator yielding a byte string """
-		fullpath = self.__absjoin(self.cwd, filename)
+		fullpath = self._absjoin(self.cwd, filename)
 		assert fullpath.startswith(self.cwd), 'Invalid file path requested by %s' % self.username
-		with open(fullpath, 'rb') as inf:
-			while True:
-				x = inf.read(4096)
-				if not x:
-					break
-				yield x
+		inf = open(fullpath, 'rb') #as inf:
+		return inf
+			# while True:
+			# 	x = inf.read(4096)
+			# 	if not x:
+			# 		break
+			# 	yield x
 
 	def file_write(self, filename, fh):
 		""" Push data to the filesystem, written in chunks of 4k. fh is a file like object """
-		fullpath = self.__absjoin(self.cwd, filename)
+		fullpath = self._absjoin(self.cwd, filename)
 		assert fullpath.startswith(self.cwd), 'Invalid file path requested by %s' % self.username
 		with open(fullpath, 'wb') as onf:
 			ts = datetime.datetime.now()
@@ -111,7 +112,7 @@ class defaultfilesystem(hook.filesystem):
 
 	def directory_write(self, dirname):
 		""" Directory creation through the side menu """
-		fullpath = self.__absjoin(self.cwd, dirname)
+		fullpath = self._absjoin(self.cwd, dirname)
 		assert fullpath.startswith(self.cwd), 'Invalid directory path requested by %s' % self.username
 		os.mkdir(fullpath)
 		return os.path.isdir(fullpath)
@@ -123,7 +124,7 @@ class defaultfilesystem(hook.filesystem):
 
 			Any action_%s function could be called with an action attribute in the core
 		"""
-		fullpath = self.__absjoin(self.cwd, filename)
+		fullpath = self._absjoin(self.cwd, filename)
 		assert fullpath.startswith(self.cwd), 'Invalid file path requested by %s' % self.username
 		logger.info('Removing %s', fullpath)
 		if os.path.isdir(fullpath):
