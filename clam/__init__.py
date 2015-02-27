@@ -72,7 +72,7 @@ class clamengine(object):
 					start_response('500 Internal Server Error', [('content-type', 'text/plain')], sys.exc_info())
 					return repr(e)
 
-		start_response('404 NOT FOUND', [('content-type', 'text/html')])
+		start_response('404 Not Found', [('content-type', 'text/html')])
 		return ('Not Found',)
 
 	def __call__(self, environ, start_response):

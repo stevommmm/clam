@@ -63,13 +63,12 @@ class defaultfilesystem(hook.filesystem):
 		""" Concat the filename with the cwd(), returns a generator yielding a byte string """
 		fullpath = self._absjoin(self.cwd, filename)
 		assert fullpath.startswith(self.cwd), 'Invalid file path requested by %s' % self.username
-		inf = open(fullpath, 'rb') #as inf:
+		try:
+			inf = open(fullpath, 'rb')
+		except IOError:
+			inf = None
 		return inf
-			# while True:
-			# 	x = inf.read(4096)
-			# 	if not x:
-			# 		break
-			# 	yield x
+
 
 	def file_write(self, filename, fh):
 		""" Push data to the filesystem, written in chunks of 4k. fh is a file like object """

@@ -155,6 +155,9 @@ def page_index(req):
 	# Handle file read or delete
 	if filename:
 		f = list(fs.file_read(filename))
+		if not f:
+			req.set_status("404 Not Found")
+			return 'Your requested file "%s" could not be found' % filename
 		if len(f) > 1:
 			logger.critical('File read response from multiple hooks')
 
