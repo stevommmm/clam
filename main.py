@@ -115,11 +115,9 @@ def page_index(req):
 
 	# Handle filesystem actions like delete
 	for action in [x for x in req._GET.keys() if x not in ['dir', 'file']]:
-		racton = filter(None, fs.action(action, filename))
+		racton = filter(None, fs.action(action, req, filename))
 		if racton:
-			req.set_status("301 Redirect")
-			req.headers = [('Location', '/?dir=' + racton[0])]
-			return
+			return racton[0]
 
 	# Handle directory list or delete
 	if not filename:

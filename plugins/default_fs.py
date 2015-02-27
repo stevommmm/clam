@@ -116,7 +116,7 @@ class defaultfilesystem(hook.filesystem):
 		os.mkdir(fullpath)
 		return os.path.isdir(fullpath)
 
-	def action_delete(self, filename):
+	def action_delete(self, request, filename):
 		""" Used for extra file actions such as delete, in this case filename can
 			be empty in the event we are deleting a directory, in that event we return
 			the parent directory to refresh to
@@ -126,10 +126,14 @@ class defaultfilesystem(hook.filesystem):
 		fullpath = self._absjoin(self.cwd, filename)
 		assert fullpath.startswith(self.cwd), 'Invalid file path requested by %s' % self.username
 		logger.info('Removing %s', fullpath)
+
+		request.set_status("301 Redirect")
 		if os.path.isdir(fullpath):
 			import shutil
 			shutil.rmtree(fullpath)
-			return os.sep.join(self.cwdname.split(os.sep)[:-1]) or os.sep
+			request.headers = [('Location', '/?dir=' + os.sep.join(self.cwdname.split(os.sep)[:-1]) or os.sep)]
+			return 'OK'
 		if os.path.isfile(fullpath):
 			os.remove(fullpath)
-			return self.cwdname
+			request.headers = [('Location', '/?dir=' + self.cwdname)]
+			return 'OK'

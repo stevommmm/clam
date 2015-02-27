@@ -25,10 +25,10 @@ class filesystem(object):
 		for c in filesystem.__inheritors__[filesystem]:
 			self.children.append(c(username, directory))
 
-	def action(self, action, filename):
+	def action(self, action, request, filename):
 		for c in self.children:
 			if hasattr(c, 'action_%s' % action):
-				yield getattr(c, 'action_%s' % action)(filename)
+				yield getattr(c, 'action_%s' % action)(request, filename)
 
 	def getcwd(self):
 		mc = collections.Counter(itertools.chain.from_iterable([c.getcwd() for c in self.children]))

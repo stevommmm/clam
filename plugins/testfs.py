@@ -28,5 +28,12 @@ class testfilesystem(hook.filesystem):
 			'file': 'Meow.dat',
 			'size': '100 GB',
 			'path': '',
-			'actions': [],
+			'actions': ['scratch'],
 		}]
+
+	def action_scratch(self, request, filename):
+		request.headers = [("content-type", "text/plain")]
+		return r"""  \    /\   Meow!
+   )  ( ')
+  (  /  )
+   \(__)|"""
