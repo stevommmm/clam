@@ -5,6 +5,11 @@
 	<link type="text/css" rel="stylesheet" href="style.css">
 </head>
 <body>
+	<div id="alertbox">
+	<noscript>
+	<p>Most of this site will not function without javascript. Please enable it.</p>
+	</noscript>
+	</div>
 	<div class="wrapper">
 		<header>
 			<div class="menu-border">
@@ -24,5 +29,12 @@
 			</form>
 		</section>
 	</div>
+	<script type="text/javascript">
+		if (typeof XMLHttpRequest === "undefined") {
+			var msg = document.createElement("p");
+			msg.appendChild(document.createTextNode("Your browser lacks support required for this application. Please update to a recent version of Firefox or Chrome."));
+			document.getElementById('alertbox').appendChild(msg);
+		}
+	</script>
 </body>
 </html>

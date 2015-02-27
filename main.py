@@ -11,12 +11,6 @@ from templates import templates
 
 application = clamengine()
 
-@application.route('^/debug$')
-def rdebug(req):
-	req.set_status("301 Redirect")
-	req.headers = [('Location', '/')]
-	return ''
-
 def csrfcheck(req):
 	s = hook.session(req)
 	username = s.get()[-1]

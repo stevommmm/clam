@@ -51,7 +51,7 @@ a small {
 	margin-top:-0.6em;
 	display:block;
 }
-noscript > p {
+#alertbox > p {
 	background-color: #D45E4E;
 	color: #fff;
 	width: 100%; 
