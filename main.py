@@ -39,7 +39,8 @@ def page_login(req):
 		if any(auth.password_verify(pw)):
 			s = hook.session(req)
 			if any(s.set(un)):
-				req.redirect = '/'
+				req.set_status("301 Redirect")
+				req.headers = [('Location', '/')]
 				return
 
 	return templates.login()
