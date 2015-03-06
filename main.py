@@ -103,16 +103,18 @@ def page_index(req):
 		files = req._POST['fileupload']
 		if type(files) != list:
 			files = [files]
-		if files[-1].filename:
-			for f in files:
-				if not f.file:
-					break
-				fn = f.filename
-				if not fn or fn.startswith('.'): #dont allow uploading dot files
-					break
+		for f in files:
+			if not f.file:
+				break
+			fn = f.filename
+			if not fn or fn.startswith('.'): #dont allow uploading dot files
+				break
+			try:
 				if any(fs.file_write(fn, f.file)):
 					logger.info("Wrote %s to storage", fn)
-		return
+			except Exception as e:
+				return repr(e)
+		return 'Completed'
 
 	# Handle filesystem actions like delete
 	for action in [x for x in req._GET.keys() if x not in ['dir', 'file']]:

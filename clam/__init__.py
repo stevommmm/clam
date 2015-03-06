@@ -69,7 +69,7 @@ class clamengine(object):
 				except Exception as e:
 					import traceback
 					logger.error("%s\t%s", e, traceback.format_exc())
-					start_response('500 Internal Server Error', [('content-type', 'text/plain')], sys.exc_info())
+					start_response('500 Internal Server Error', [('content-type', 'text/plain')])
 					return "An incident has been recorded:\n" + repr(e)
 
 		start_response('404 Not Found', [('content-type', 'text/html')])

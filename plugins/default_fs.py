@@ -74,15 +74,27 @@ class defaultfilesystem(hook.filesystem):
 		""" Push data to the filesystem, written in chunks of 4k. fh is a file like object """
 		fullpath = self._absjoin(self.cwd, filename)
 		assert fullpath.startswith(self.cwd), 'Invalid file path requested by %s' % self.username
-		with open(fullpath, 'wb') as onf:
-			ts = datetime.datetime.now()
-			while True:
-				x = fh.read(4096)
-				if not x:
-					break
-				onf.write(x)
-			logger.info('File write complete for location "%s", in duration "%s"', filename, total_seconds(datetime.datetime.now() - ts))
-			return onf.tell()
+
+		try:
+			os.link(fh.name, fullpath)
+		except OSError as e:
+			if e.errno == 18:
+				with open(fullpath, 'wb') as onf:
+					ts = datetime.datetime.now()
+					while True:
+						x = fh.read(4096)
+						if not x:
+							break
+						onf.write(x)
+					logger.info('Manual write complete for location "%s", in duration "%s"', filename, total_seconds(datetime.datetime.now() - ts))
+					return onf.tell()
+			else:
+				raise e
+		finally:
+			if not fh.closed:
+				if os.path.exists(fh.name):
+					os.remove(fh.name)
+
 
 	def directory_read(self):
 		""" Our main list, output args are mostly passed straight to the templater
@@ -124,7 +136,9 @@ class defaultfilesystem(hook.filesystem):
 			Any action_%s function could be called with an action attribute in the core
 		"""
 		fullpath = self._absjoin(self.cwd, filename)
-		assert fullpath.startswith(self.cwd), 'Invalid file path requested by %s' % self.username
+		if not filename:
+			fullpath += os.sep
+		assert fullpath.startswith(self.cwd), 'Invalid file path "%s" requested by %s' % (fullpath, self.username)
 		logger.info('Removing %s', fullpath)
 
 		request.set_status("301 Redirect")

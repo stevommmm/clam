@@ -157,12 +157,27 @@
 					}
 				}, false);
 
+				xhr.onerror = function(e) {
+					console.log('error---');
+					console.log(e);
+					console.log('error---');
+					tn.data = file.name + ": " + xhr.responseText;
+				};
+
+				xhr.onabort = function(e) {
+					console.log('abort---');
+					console.log(e);
+					console.log('abort---');
+					tn.data = file.name + ": " + xhr.responseText;
+				};
+
 				// file received/failed
 				xhr.onreadystatechange = function(e) {
 					if (xhr.readyState == 4) {
-						tn.data = "Complete " + file.name;
+						tn.data = file.name + ": " + xhr.responseText;
 						progress_used.className = (xhr.status == 200 ? "bar-used success" : "bar-used failure");
 					}
+					console.log(e);
 				};
 
 				// start upload
