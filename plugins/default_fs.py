@@ -90,10 +90,6 @@ class defaultfilesystem(hook.filesystem):
 					return onf.tell()
 			else:
 				raise e
-		finally:
-			if not fh.closed:
-				if os.path.exists(fh.name):
-					os.remove(fh.name)
 
 
 	def directory_read(self):
