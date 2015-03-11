@@ -41,7 +41,10 @@ class filesystem(object):
 		us = [c.getusage() for c in self.children]
 		freegb = sum([x[0] for x in us])
 		totalgb = sum([x[1] for x in us])
-		return {'disk_percent': int(100 - (100 * float(freegb) / float(totalgb))), 'disk_ingb': freegb}
+		try:
+			return {'disk_percent': int(100 - (100 * float(freegb) / float(totalgb))), 'disk_ingb': freegb}
+		except ZeroDivisionError:
+			return {'disk_percent': 0, 'disk_ingb': 0}
 
 	def file_read(self, filename):
 		return filter(None, [c.file_read(filename) for c in self.children])
