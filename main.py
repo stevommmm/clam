@@ -53,7 +53,7 @@ def page_logout(req):
 			list(s.expire())
 
 	req.set_status("301 Redirect")
-	req.headers = [('Location', '/')]
+	req.headers.append(('Location', '/'))
 
 @application.route('^/$')
 def page_index(req):
